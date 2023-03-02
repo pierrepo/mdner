@@ -23,7 +23,7 @@ mamba env create -f env/environment.yml
 
 Load the `mdner` conda environment:
 ```
-conda activate mdde
+conda activate mdner
 ```
 
 Note: you can also update the conda environment with:
