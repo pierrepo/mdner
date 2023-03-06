@@ -24,3 +24,5 @@ dependencies:
       - tqdm
       - matplotlib
       - spicy
+      - seaborn
+      - scikit-learn
