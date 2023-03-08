@@ -7,9 +7,18 @@ import argparse
 parser = argparse.ArgumentParser(
     description="Generate text files containing the title and description of the dataset in the annotation folder."
 )
-parser.add_argument("threshold", help="The threshold for the description length.")
+parser.add_argument("-c", "--clear", help="Clear the annotation.", action="store_true")
 parser.add_argument(
-    "n", help="The number of data to be selected for the corpus similarity."
+    "threshold",
+    help="The threshold for the description length.",
+    nargs="?",
+    default=600,
+)
+parser.add_argument(
+    "n",
+    help="The number of data to be selected for the corpus similarity.",
+    nargs="?",
+    default=200,
 )
 args = parser.parse_args()
 
