@@ -4,6 +4,7 @@ import spacy
 from spacy.training import Example
 import glob
 import re
+import os
 
 
 def display_ner(data_json, json_edit):
@@ -101,6 +102,7 @@ def user_interaction():
     st.set_page_config(page_title="JSON Corrector", layout="wide")
     load_css()
     st.title("JSON Corrector")
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
     path = "../annotations/"
     files = [file.split("/")[-1].split(".")[0] for file in glob.glob(path + "*.json")]
     if files:
