@@ -3,6 +3,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 import argparse
+import glob, os
+
 
 parser = argparse.ArgumentParser(
     description="Generate text files containing the title and description of the dataset in the annotation folder."
@@ -211,5 +213,18 @@ def generate_annotation(threshold, n):
     print("Done !")
 
 
+def clear_folder():
+    """
+    Remove all files in the folder.
+    """
+    path = "../annotations/"
+    files = glob.glob(path + "*.txt")
+    for f in files:
+        os.remove(f)
+    print("Folder cleared !")
+
+
 if __name__ == "__main__":
+    if args.clear:
+        clear_folder()
     generate_annotation(int(args.threshold), int(args.n))
