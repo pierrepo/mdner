@@ -26,3 +26,4 @@ dependencies:
       - spicy
       - seaborn
       - scikit-learn
+      - streamlit
