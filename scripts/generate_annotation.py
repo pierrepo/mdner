@@ -1,6 +1,17 @@
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from tqdm import tqdm
+import argparse
+
+parser = argparse.ArgumentParser(
+    description="Generate text files containing the title and description of the dataset in the annotation folder."
+)
+parser.add_argument("threshold", help="The threshold for the description length.")
+parser.add_argument(
+    "n", help="The number of data to be selected for the corpus similarity."
+)
+args = parser.parse_args()
 
 
 def load_data():
@@ -28,26 +39,21 @@ def load_data():
 
 def description_length(df, threshold):
     """
-    Select datasets from the datasets dataframe that have a description length
-    greater than the threshold.
+    Select datasets that have a description length greater than the threshold.
 
     Parameters
     ----------
     df: pandas.DataFrame
-        The datasets dataframe.
-    gro: pandas.DataFrame
-        The gro dataframe.
+        A datasets.
     threshold: int
         The threshold for the description length.
 
     Returns
     -------
     pandas.DataFrame
-        The selected datasets dataframe.
+        The selected datasets.
     """
-    df.loc[:, "description_length"] = (
-        df["description"].str.len() + df["title"].str.len()
-    )
+    df["description_length"] = df["description"].str.len() + df["title"].str.len()
     if df["description_length"].isnull().values.any():
         df = df.dropna(subset=["description_length", "title", "description"])
     data = df[df["description_length"] > threshold]
@@ -56,6 +62,19 @@ def description_length(df, threshold):
 
 
 def homogeneous_composition(df):
+    """
+    Select data with protein and lipid homogeneity.
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+        A datasets.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The selected datasets.
+    """
     lipid_data = df[(df["has_protein"] == False) & (df["has_lipid"] == True)]
     protein_data = df[(df["has_protein"] == True) & (df["has_lipid"] == False)]
     size_sample = min(lipid_data.shape[0], protein_data.shape[0])
@@ -69,7 +88,22 @@ def homogeneous_composition(df):
     return data
 
 
-def corpus_similarity(df, threshold):
+def corpus_similarity(df, n):
+    """
+    Selects n data with low similarity to other texts.
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+        A datasets.
+    n: int
+        The number of data to select.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The selected datasets.
+    """
     cols = ["title", "description"]
     df["corpus"] = df[cols].apply(lambda row: " ".join(row.values.astype(str)), axis=1)
     vectorizer = TfidfVectorizer()
@@ -82,8 +116,8 @@ def corpus_similarity(df, threshold):
     )
     similarity_data = [(sum(cos_data.iloc[i, :]), i) for i in range(len(cos_data))]
     similarity_data.sort()
-    if threshold < len(similarity_data):
-        data = df.iloc[[sim[1] for sim in similarity_data[: threshold + 1]], :]
+    if n < len(similarity_data):
+        data = df.iloc[[sim[1] for sim in similarity_data[:n]], :]
     else:
         data = df
     print(
@@ -94,6 +128,19 @@ def corpus_similarity(df, threshold):
 
 
 def clear_annotation(df):
+    """
+    Remove some characters and urls from the annotation.
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+        A datasets.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The selected datasets.
+    """
     df = df.replace("_", " ", regex=True)
     df["annotation"] = df["annotation"].str.replace(
         r'https?://[^\s<>"]+|www\.[^\s<>"]+',
@@ -103,9 +150,23 @@ def clear_annotation(df):
     return df
 
 
-def generate_annotation(df):
-    path = "../annotations/test/"
-    for i in range(len(df)):
+def create_annotation(df):
+    """
+    Create a file for each annotation.
+
+    Parameters
+    ----------
+    df: pandas.DataFrame
+        A datasets.
+
+    Returns
+    -------
+    pandas.DataFrame
+        The selected datasets.
+    """
+    path = "../annotations/"
+    print("Writing annotations in files...")
+    for i in tqdm(range(len(df))):
         with open(
             path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"] + ".txt",
             "w",
@@ -113,19 +174,33 @@ def generate_annotation(df):
             f.write(df.loc[i, "annotation"])
 
 
-if __name__ == "__main__":
+def generate_annotation(threshold, n):
+    """
+    Generate text files containing the title and description of the dataset.
+
+    Parameters
+    ----------
+    threshold: int
+        The threshold for the description length.
+    n: int
+        The number of data to select for the corpus sililarity.
+    """
     gro_data = load_data()
     # Remove the duplicate description
     gro_data = gro_data.drop_duplicates("description")
-    threshold_length = 600
-    threshold_similarity = 200
     # Prerequise for the annotation
-    df_length = description_length(gro_data, threshold_length)
-    df_similarity = corpus_similarity(df_length, threshold_similarity)
+    df_length = description_length(gro_data, threshold)
+    df_similarity = corpus_similarity(df_length, n)
     df_composition = homogeneous_composition(df_similarity)
     # Setup and cleaning up the annotation
     df = df_composition[["dataset_id", "dataset_origin"]]
     df = df.copy()
-    df["annotation"] = df_composition["title"] + df_composition["description"]
+    df["annotation"] = df_composition["title"] + " " + df_composition["description"]
     data = clear_annotation(df)
-    generate_annotation(data)
+    # Write the annotations in files
+    create_annotation(data)
+    print("Done !")
+
+
+if __name__ == "__main__":
+    generate_annotation(int(args.threshold), int(args.n))
