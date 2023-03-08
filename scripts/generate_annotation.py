@@ -20,7 +20,7 @@ parser.add_argument(
     "n",
     help="The number of data to be selected for the corpus similarity.",
     nargs="?",
-    default=200,
+    default=250,
 )
 args = parser.parse_args()
 
