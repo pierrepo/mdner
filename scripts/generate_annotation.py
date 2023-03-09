@@ -1,9 +1,12 @@
+"""Script generating a set of text files to be used as learning sets."""
+
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
 import argparse
-import glob, os
+import glob
+import os
 
 
 parser = argparse.ArgumentParser(
@@ -27,6 +30,7 @@ args = parser.parse_args()
 
 def load_data():
     """Retrieve our data and loads it into the pd.DataFrame object.
+
     Returns
     -------
     dict
@@ -101,7 +105,7 @@ def homogeneous_composition(df):
 
 def corpus_similarity(df, n):
     """
-    Selects n data with low similarity to other texts.
+    Select n data with low similarity to other texts.
 
     Parameters
     ----------
@@ -121,7 +125,7 @@ def corpus_similarity(df, n):
     trsfm = vectorizer.fit_transform(df["corpus"])
     cos_data = pd.DataFrame(
         [
-            cosine_similarity(trsfm[i : i + 1], trsfm)[0]
+            cosine_similarity(trsfm[i: i + 1], trsfm)[0]
             for i in range(len(df["corpus"]))
         ]
     )
@@ -214,9 +218,7 @@ def generate_annotation(threshold, n):
 
 
 def clear_folder():
-    """
-    Remove all files in the folder.
-    """
+    """Remove all files in the folder."""
     path = "../annotations/"
     files = glob.glob(path + "*.txt")
     for f in files:

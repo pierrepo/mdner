@@ -1,12 +1,26 @@
+"""Streamlit tool to correct json files in the annotations folder."""
+
 import streamlit as st
 import json
 import spacy
 from spacy.training import Example
 import re
-import glob, os
+import glob
+import os
 
 
-def display_ner(data_json, json_edit):
+def display_ner(data_json: dict, json_edit: dict):
+    """
+    Visualizing the entity recognizer of the edited json.
+
+    Parameters
+    ----------
+    data_json: dict
+        The original json file.
+    json_edit: dict
+        The edited json file.
+    """
+    # Colors for the entities
     colors = {
         "TEMPERATURE": "#FF0000",
         "SOFTWARE": "#FFA500",
@@ -18,6 +32,7 @@ def display_ner(data_json, json_edit):
         "ents": ["TEMPERATURE", "SOFTWARE", "SIMULATION TIME", "MODEL", "MOLECULE"],
         "colors": colors,
     }
+    # Display the entities
     nlp = spacy.blank("en")
     text, _ = data_json["annotations"][0]
     example = Example.from_dict(nlp.make_doc(text), json.loads(json_edit))
@@ -28,6 +43,14 @@ def display_ner(data_json, json_edit):
 
 
 def display_text(name_file):
+    """
+    Display the text corresponding to the json file.
+
+    Parameters
+    ----------
+    name_file: str
+        The name of the json file.
+    """
     with st.expander("See the text corresponding to the JSON file"):
         with open(f"../annotations/{name_file.split('.')[0]}.txt", "r") as f:
             text = f.read()
@@ -35,8 +58,25 @@ def display_text(name_file):
 
 
 def display_editor(name_file, data_json):
+    """
+    Display all the elements essential to the correction of the json file.
+
+    Parameters
+    ----------
+    name_file: str
+        The name of the json file.
+    data_json: dict
+        The original json file.
+
+    Returns
+    -------
+    tuple
+        The edited json file, a boolean to know if it has been edited and the column of the editor.
+    """
+    # Display the text corresponding to the json file
     display_text(name_file)
     col_editor, col_display = st.columns([1, 2])
+    # Display the editor
     with col_editor:
         ent_json = json.dumps(data_json["annotations"][0][1], indent=4)
         new_json = st.text_area(
@@ -44,6 +84,7 @@ def display_editor(name_file, data_json):
             ent_json,
             height=600,
         )
+    # Display the entities
     with col_display:
         try:
             st.markdown(
@@ -58,6 +99,19 @@ def display_editor(name_file, data_json):
 
 
 def display_filters(files):
+    """
+    Display the filters to select the json file to correct.
+
+    Parameters
+    ----------
+    file: list
+        The list of json name files.
+
+    Returns
+    -------
+    str
+        The path of the json file to correct.
+    """
     if len(files) > 1:
         st.sidebar.title("Filters")
         select_json = st.sidebar.slider(
@@ -76,6 +130,7 @@ def display_filters(files):
 
 
 def load_css():
+    """Load a css style."""
     st.markdown(
         """
                 <style>
@@ -94,6 +149,20 @@ def load_css():
 
 
 def save_json(data_json, new_json, path_name, edited):
+    """
+    Save the edited json file.
+
+    Parameters
+    ----------
+    data_json: dict
+        The original json file.
+    new_json: str
+        The edited json file.
+    path_name: str
+        The path of the json file to correct.
+    edited: bool
+        A boolean to know if it has been edited.
+    """
     save = st.button("Save", disabled=not edited)
     if save:
         f = open(path_name, "w")
@@ -106,6 +175,10 @@ def save_json(data_json, new_json, path_name, edited):
 
 
 def user_interaction():
+    """Control the streamlit application.
+
+    Allows interaction between the user and the set of json files.
+    """
     st.set_page_config(page_title="JSON Corrector", layout="wide")
     load_css()
     st.title("JSON Corrector")
