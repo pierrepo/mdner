@@ -51,7 +51,7 @@ Generate json files for spaCy NER and text files containing titles and descripti
 Launch the generation of text files :
 
 ```
-python3 script/generate_annotation.py
+python3 scripts/generate_annotation.py
 ```
 
 #### Parameters
@@ -77,5 +77,5 @@ Annotating json files requires manual annotation and must be in the `annotations
 Edit the json files :
 
 ```
-streamlit run script/JSON_Corrector.py
+streamlit run scripts/JSON_Corrector.py
 ```
