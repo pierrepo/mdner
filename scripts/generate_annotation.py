@@ -12,7 +12,8 @@ import os
 parser = argparse.ArgumentParser(
     description="Generate text files containing the title and description of the dataset in the annotation folder."
 )
-parser.add_argument("-c", "--clear", help="Clear the annotation.", action="store_true")
+parser.add_argument(
+    "-c", "--clear", help="Clear the annotation.", action="store_true")
 parser.add_argument(
     "threshold",
     help="The threshold for the description length.",
@@ -21,7 +22,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "n",
-    help="The number of data to be selected for the corpus similarity.",
+    help="The number of least similar descriptions to be selected.",
     nargs="?",
     default=250,
 )
@@ -68,7 +69,8 @@ def description_length(df, threshold):
     pandas.DataFrame
         The selected datasets.
     """
-    df["description_length"] = df["description"].str.len() + df["title"].str.len()
+    df["description_length"] = df["description"].str.len() + \
+        df["title"].str.len()
     if df["description_length"].isnull().values.any():
         df = df.dropna(subset=["description_length", "title", "description"])
     data = df[df["description_length"] > threshold]
@@ -120,7 +122,8 @@ def corpus_similarity(df, n):
         The selected datasets.
     """
     cols = ["title", "description"]
-    df["corpus"] = df[cols].apply(lambda row: " ".join(row.values.astype(str)), axis=1)
+    df["corpus"] = df[cols].apply(
+        lambda row: " ".join(row.values.astype(str)), axis=1)
     vectorizer = TfidfVectorizer()
     trsfm = vectorizer.fit_transform(df["corpus"])
     cos_data = pd.DataFrame(
@@ -129,7 +132,8 @@ def corpus_similarity(df, n):
             for i in range(len(df["corpus"]))
         ]
     )
-    similarity_data = [(sum(cos_data.iloc[i, :]), i) for i in range(len(cos_data))]
+    similarity_data = [(sum(cos_data.iloc[i, :]), i)
+                       for i in range(len(cos_data))]
     similarity_data.sort()
     if n < len(similarity_data):
         data = df.iloc[[sim[1] for sim in similarity_data[:n]], :]
@@ -183,7 +187,8 @@ def create_annotation(df):
     print("Writing annotations in files...")
     for i in tqdm(range(len(df))):
         with open(
-            path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"] + ".txt",
+            path + df.loc[i, "dataset_origin"] +
+                "_" + df.loc[i, "dataset_id"] + ".txt",
             "w",
         ) as f:
             f.write(df.loc[i, "annotation"])
@@ -210,7 +215,8 @@ def generate_annotation(threshold, n):
     # Setup and cleaning up the annotation
     df = df_composition[["dataset_id", "dataset_origin"]]
     df = df.copy()
-    df["annotation"] = df_composition["title"] + " " + df_composition["description"]
+    df["annotation"] = df_composition["title"] + \
+        " " + df_composition["description"]
     data = clear_annotation(df)
     # Write the annotations in files
     create_annotation(data)
