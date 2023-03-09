@@ -225,6 +225,7 @@ def clear_folder():
 
 
 if __name__ == "__main__":
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
     if args.clear:
         clear_folder()
     generate_annotation(int(args.threshold), int(args.n))
