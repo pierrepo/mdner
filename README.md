@@ -63,7 +63,7 @@ Generate text files containing the title and description of the dataset in the a
 
 positional arguments:
   threshold    The threshold for the description length.
-  n            The number of data to be selected for the corpus similarity.
+  n            The number of least similar descriptions to be selected.
 
 options:
   -h, --help   show this help message and exit
