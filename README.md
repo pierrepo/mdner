@@ -47,7 +47,7 @@ To deactivate an active environment, use
 conda deactivate
 ```
 
-## Generate training data
+## Generate annotations data
 
 Generate json files for spaCy NER and text files containing titles and descriptions of our MD datasets available [here](https://sandbox.zenodo.org/record/1171298).
 
