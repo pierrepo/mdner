@@ -2,9 +2,8 @@ import streamlit as st
 import json
 import spacy
 from spacy.training import Example
-import glob
 import re
-import os
+import glob, os
 
 
 def display_ner(data_json, json_edit):
@@ -28,7 +27,15 @@ def display_ner(data_json, json_edit):
     st.markdown(ent_html, unsafe_allow_html=True)
 
 
+def display_text(name_file):
+    with st.expander("See the text corresponding to the JSON file"):
+        with open(f"../annotations/{name_file.split('.')[0]}.txt", "r") as f:
+            text = f.read()
+            st.write(text)
+
+
 def display_editor(name_file, data_json):
+    display_text(name_file)
     col_editor, col_display = st.columns([1, 2])
     with col_editor:
         ent_json = json.dumps(data_json["annotations"][0][1], indent=4)
@@ -46,8 +53,8 @@ def display_editor(name_file, data_json):
             display_ner(data_json, new_json)
         except Exception:
             st.error("This json is not well written !", icon="🚨")
-            return ent_json, False
-    return new_json, new_json != ent_json
+            return ent_json, False, col_editor
+    return new_json, new_json != ent_json, col_editor
 
 
 def display_filters(files):
@@ -110,8 +117,11 @@ def user_interaction():
         f = open(path_name, "r")
         data_json = json.load(f)
         f.close()
-        new_json, edited = display_editor(path_name.split("/")[-1], data_json)
-        save_json(data_json, new_json, path_name, edited)
+        new_json, edited, col_editor = display_editor(
+            path_name.split("/")[-1], data_json
+        )
+        with col_editor:
+            save_json(data_json, new_json, path_name, edited)
     else:
         st.error("No JSON file found !", icon="🚨")
 
