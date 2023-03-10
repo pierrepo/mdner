@@ -42,19 +42,23 @@ def display_ner(data_json: dict, json_edit: dict):
     st.markdown(ent_html, unsafe_allow_html=True)
 
 
-def display_text(name_file):
+def have_text(name_file, col_msg):
     """
-    Display the text corresponding to the json file.
+    Display an error message if the text file does not exist.
 
     Parameters
     ----------
     name_file: str
         The name of the json file.
+    col_msg: streamlit.columns
+        The column where the message will be displayed.
     """
-    with st.expander("See the text corresponding to the JSON file"):
-        with open(f"../annotations/{name_file.split('.')[0]}.txt", "r") as f:
-            text = f.read()
-            st.write(text)
+    with col_msg:
+        if not os.path.exists(f"../annotations/{name_file.split('.')[0]}.txt"):
+            st.error(
+                f"The text corresponding to the JSON file {name_file} does not exist !",
+                icon="🚨",
+            )
 
 
 def display_editor(name_file, data_json):
@@ -73,8 +77,6 @@ def display_editor(name_file, data_json):
     tuple
         The edited json file, a boolean to know if it has been edited and the column of the editor.
     """
-    # Display the text corresponding to the json file
-    display_text(name_file)
     col_editor, col_display = st.columns([1, 2])
     # Display the editor
     with col_editor:
@@ -98,13 +100,27 @@ def display_editor(name_file, data_json):
     return new_json, new_json != ent_json, col_editor
 
 
-def display_filters(files):
+def display_infos(json_files, text_files):
+    """
+    Display the number of json files found and the number of text files found.
+
+    Parameters
+    ----------
+    json_files: list
+        The list of json name files.
+    text_files: list
+        The list of text name files.
+    """
+    st.sidebar.write(len(json_files), "/", len(text_files), "json files found.")
+
+
+def display_filters(json_files):
     """
     Display the filters to select the json file to correct.
 
     Parameters
     ----------
-    file: list
+    json_files: list
         The list of json name files.
 
     Returns
@@ -112,20 +128,20 @@ def display_filters(files):
     str
         The path of the json file to correct.
     """
-    if len(files) > 1:
+    if len(json_files) > 1:
         st.sidebar.title("Filters")
         select_json = st.sidebar.slider(
-            "Choose a JSON file to correct:", 1, len(files), 1
+            "Choose a JSON file to correct:", 1, len(json_files), 1
         )
         search_json = st.sidebar.text_input(
-            "Enter a JSON file name:", placeholder="Example : zenodo_838635"
+            "Enter a JSON file name:", placeholder="Example : zenodo_838635.json"
         )
         if search_json:
             path_name = "../annotations/" + search_json
         else:
-            path_name = "../annotations/" + files[select_json - 1] + ".json"
+            path_name = "../annotations/" + json_files[select_json - 1] + ".json"
     else:
-        path_name = "../annotations/" + files[0] + ".json"
+        path_name = "../annotations/" + json_files[0] + ".json"
     return path_name
 
 
@@ -148,7 +164,7 @@ def load_css():
     )
 
 
-def save_json(data_json, new_json, path_name, edited):
+def save_json(data_json, new_json, path_name, edited, col_msg):
     """
     Save the edited json file.
 
@@ -162,6 +178,8 @@ def save_json(data_json, new_json, path_name, edited):
         The path of the json file to correct.
     edited: bool
         A boolean to know if it has been edited.
+    col_msg: streamlit.columns
+        The column where the message will be displayed.
     """
     save = st.button("Save", disabled=not edited)
     if save:
@@ -171,7 +189,26 @@ def save_json(data_json, new_json, path_name, edited):
         save_json = json.dumps(data_json, indent=None)
         f.write(save_json)
         f.close()
-        st.success("JSON file saved !", icon="✅")
+        with col_msg:
+            st.success("JSON file saved !", icon="✅")
+
+
+def remove_json(path_name, col_msg):
+    """
+    Remove the json file.
+
+    Parameters
+    ----------
+    path_name: str
+        The path of the json file to correct.
+    col_msg: streamlit.columns
+        The column where the message will be displayed.
+    """
+    remove = st.button("Remove")
+    if remove:
+        os.remove(path_name)
+        with col_msg:
+            st.success("JSON file removed !", icon="✅")
 
 
 def user_interaction():
@@ -182,21 +219,30 @@ def user_interaction():
     st.set_page_config(page_title="JSON Corrector", layout="wide")
     load_css()
     st.title("JSON Corrector")
+    col_msg, _ = st.columns([2, 1])
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     path = "../annotations/"
-    files = [file.split("/")[-1].split(".")[0] for file in glob.glob(path + "*.json")]
-    if files:
-        path_name = display_filters(files)
+    json_files = [
+        file.split("/")[-1].split(".")[0] for file in glob.glob(path + "*.json")
+    ]
+    text_files = [
+        file.split("/")[-1].split(".")[0] for file in glob.glob(path + "*.txt")
+    ]
+    if json_files:
+        display_infos(json_files, text_files)
+        path_name = display_filters(json_files)
         f = open(path_name, "r")
         data_json = json.load(f)
         f.close()
-        new_json, edited, col_editor = display_editor(
-            path_name.split("/")[-1], data_json
-        )
+        name_file = path_name.split("/")[-1]
+        have_text(name_file, col_msg)
+        new_json, edited, col_editor = display_editor(name_file, data_json)
         with col_editor:
-            save_json(data_json, new_json, path_name, edited)
+            save_json(data_json, new_json, path_name, edited, col_msg)
+            remove_json(path_name, col_msg)
     else:
-        st.error("No JSON file found !", icon="🚨")
+        with col_msg:
+            st.error("No JSON file found !", icon="🚨")
 
 
 if __name__ == "__main__":
