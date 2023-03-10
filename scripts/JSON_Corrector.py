@@ -42,6 +42,63 @@ def display_ner(data_json: dict, json_edit: dict):
     st.markdown(ent_html, unsafe_allow_html=True)
 
 
+def found_entity(to_found, text, entities):
+    """
+    Find the entity in the text.
+
+    Parameters
+    ----------
+    to_found: str
+        The entity to add.
+    text: str
+        The text of the json file.
+    entities: list
+        The entities of the json file.
+
+    Returns
+    -------
+    tuple
+        The start and end positions of the entity.
+    """
+    # Find the entity in the text
+    for found in re.finditer(to_found, text):
+        # If the entity is found
+        if not [
+            found.start(),
+            found.end(),
+        ] in [[elm[0], elm[1]] for elm in entities]:
+            # Add the entity to the json file
+            return found.start(), found.end()
+    return None
+
+
+def display_add_entity(data_json):
+    col_input, col_select, col_send = st.columns([1, 1, 1])
+    with col_input:
+        to_found = st.text_input(
+            "",
+            placeholder="To add an entity, enter the text",
+            label_visibility="collapsed",
+        )
+    with col_select:
+        ent = st.selectbox(
+            "",
+            data_json["classes"],
+            index=0,
+            key="select_entity",
+            label_visibility="collapsed",
+        )
+    with col_send:
+        add = st.button("Add")
+    if add:
+        positions = found_entity(
+            to_found,
+            data_json["annotations"][0][0],
+            data_json["annotations"][0][1]["entities"],
+        )
+        return [positions[0], positions[1], ent] if positions else None
+
+
 def have_text(name_file, col_msg):
     """
     Display an error message if the text file does not exist.
@@ -77,9 +134,16 @@ def display_editor(name_file, data_json):
     tuple
         The edited json file, a boolean to know if it has been edited and the column of the editor.
     """
+    to_add = display_add_entity(data_json)
     col_editor, col_display = st.columns([1, 2])
     # Display the editor
     with col_editor:
+        if to_add != None:
+            f = open(f"../annotations/{name_file}", "w")
+            data_json["annotations"][0][1]["entities"].append(to_add)
+            save_json = json.dumps(data_json, indent=None)
+            f.write(save_json)
+            f.close()
         ent_json = json.dumps(data_json["annotations"][0][1], indent=4)
         new_json = st.text_area(
             "JSON Editor",
@@ -238,8 +302,11 @@ def user_interaction():
         have_text(name_file, col_msg)
         new_json, edited, col_editor = display_editor(name_file, data_json)
         with col_editor:
-            save_json(data_json, new_json, path_name, edited, col_msg)
-            remove_json(path_name, col_msg)
+            col_save, col_remove, _, _ = st.columns([1, 1, 1, 1])
+            with col_save:
+                save_json(data_json, new_json, path_name, edited, col_msg)
+            with col_remove:
+                remove_json(path_name, col_msg)
     else:
         with col_msg:
             st.error("No JSON file found !", icon="🚨")
