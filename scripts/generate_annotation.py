@@ -1,6 +1,7 @@
 """Script generating a set of text files to be used as learning sets."""
 
 import pandas as pd
+import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
@@ -12,8 +13,7 @@ import os
 parser = argparse.ArgumentParser(
     description="Generate text files containing the title and description of the dataset in the annotation folder."
 )
-parser.add_argument(
-    "-c", "--clear", help="Clear the annotation.", action="store_true")
+parser.add_argument("-c", "--clear", help="Clear the annotation.", action="store_true")
 parser.add_argument(
     "threshold",
     help="The threshold for the description length.",
@@ -21,10 +21,10 @@ parser.add_argument(
     default=600,
 )
 parser.add_argument(
-    "n",
-    help="The number of least similar descriptions to be selected.",
+    "cutoff",
+    help="Select the description where the cosine similarity is below the threshold.",
     nargs="?",
-    default=250,
+    default=0.8,
 )
 args = parser.parse_args()
 
@@ -53,7 +53,7 @@ def load_data():
     return gro_data
 
 
-def description_length(df, threshold):
+def description_length(df: pd.DataFrame, threshold: float):
     """
     Select datasets that have a description length greater than the threshold.
 
@@ -69,16 +69,16 @@ def description_length(df, threshold):
     pandas.DataFrame
         The selected datasets.
     """
-    df["description_length"] = df["description"].str.len() + \
-        df["title"].str.len()
+    df["description_length"] = df["description"].str.len() + df["title"].str.len()
     if df["description_length"].isnull().values.any():
         df = df.dropna(subset=["description_length", "title", "description"])
     data = df[df["description_length"] > threshold]
     print("[Func. description_length] Number of description : ", data.shape[0])
+    data.reset_index(drop=True, inplace=True)
     return data
 
 
-def homogeneous_composition(df):
+def homogeneous_composition(df: pd.DataFrame):
     """
     Select data with protein and lipid homogeneity.
 
@@ -102,10 +102,11 @@ def homogeneous_composition(df):
         "[Func. homogeneous_composition] Number of description : ",
         data.shape[0],
     )
+    data.reset_index(drop=True, inplace=True)
     return data
 
 
-def corpus_similarity(df, n):
+def corpus_similarity(df: pd.DataFrame, cutoff: float):
     """
     Select n data with low similarity to other texts.
 
@@ -113,8 +114,8 @@ def corpus_similarity(df, n):
     ----------
     df: pandas.DataFrame
         A datasets.
-    n: int
-        The number of data to select.
+    cutoff: float
+        The threshold for the corpus sililarity.
 
     Returns
     -------
@@ -122,31 +123,30 @@ def corpus_similarity(df, n):
         The selected datasets.
     """
     cols = ["title", "description"]
-    df["corpus"] = df[cols].apply(
-        lambda row: " ".join(row.values.astype(str)), axis=1)
+    df["corpus"] = df[cols].apply(lambda row: " ".join(row.values.astype(str)), axis=1)
     vectorizer = TfidfVectorizer()
     trsfm = vectorizer.fit_transform(df["corpus"])
     cos_data = pd.DataFrame(
         [
-            cosine_similarity(trsfm[i: i + 1], trsfm)[0]
+            cosine_similarity(trsfm[i : i + 1], trsfm)[0]
             for i in range(len(df["corpus"]))
         ]
     )
-    similarity_data = [(sum(cos_data.iloc[i, :]), i)
-                       for i in range(len(cos_data))]
-    similarity_data.sort()
-    if n < len(similarity_data):
-        data = df.iloc[[sim[1] for sim in similarity_data[:n]], :]
+    if 0.0 <= cutoff <= 1.0:
+        np.fill_diagonal(cos_data.values, -1)
+        index_remove = cos_data[(cos_data > cutoff).any(axis=1)].index
+        data = df.drop(index=index_remove.tolist(), axis=0)
     else:
         data = df
     print(
         "[Func. corpus_similarity] Number of description : ",
         data.shape[0],
     )
+    data.reset_index(drop=True, inplace=True)
     return data
 
 
-def clear_annotation(df):
+def clear_annotation(df: pd.DataFrame):
     """
     Remove some characters and urls from the annotation.
 
@@ -169,7 +169,7 @@ def clear_annotation(df):
     return df
 
 
-def create_annotation(df):
+def create_annotation(df: pd.DataFrame):
     """
     Create a file for each annotation.
 
@@ -187,14 +187,13 @@ def create_annotation(df):
     print("Writing annotations in files...")
     for i in tqdm(range(len(df))):
         with open(
-            path + df.loc[i, "dataset_origin"] +
-                "_" + df.loc[i, "dataset_id"] + ".txt",
+            path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"] + ".txt",
             "w",
         ) as f:
             f.write(df.loc[i, "annotation"])
 
 
-def generate_annotation(threshold, n):
+def generate_annotation(threshold: int, cutoff: float):
     """
     Generate text files containing the title and description of the dataset.
 
@@ -202,21 +201,20 @@ def generate_annotation(threshold, n):
     ----------
     threshold: int
         The threshold for the description length.
-    n: int
-        The number of data to select for the corpus sililarity.
+    cutoff: float
+        The threshold for the corpus sililarity.
     """
     gro_data = load_data()
     # Remove the duplicate description
     gro_data = gro_data.drop_duplicates("description")
     # Prerequise for the annotation
     df_length = description_length(gro_data, threshold)
-    df_similarity = corpus_similarity(df_length, n)
+    df_similarity = corpus_similarity(df_length, cutoff)
     df_composition = homogeneous_composition(df_similarity)
     # Setup and cleaning up the annotation
     df = df_composition[["dataset_id", "dataset_origin"]]
     df = df.copy()
-    df["annotation"] = df_composition["title"] + \
-        " " + df_composition["description"]
+    df["annotation"] = df_composition["title"] + " " + df_composition["description"]
     data = clear_annotation(df)
     # Write the annotations in files
     create_annotation(data)
@@ -236,4 +234,4 @@ if __name__ == "__main__":
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     if args.clear:
         clear_folder()
-    generate_annotation(int(args.threshold), int(args.n))
+    generate_annotation(int(args.threshold), float(args.cutoff))
