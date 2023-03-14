@@ -9,17 +9,37 @@ import glob
 import os
 
 
-def display_ner(data_json: dict, json_edit: dict):
+def display_have_text(name_file: str, col_msg: st.columns) -> None:
+    """
+    Display an error message if the text file does not exist.
+
+    Parameters
+    ----------
+    name_file: str
+        The name of the json file.
+    col_msg: st.columns
+        The column where the message will be displayed.
+    """
+    with col_msg:
+        if not os.path.exists(f"../annotations/{name_file.split('.')[0]}.txt"):
+            st.error(
+                f"The text corresponding to the JSON file {name_file} does not exist !",
+                icon="🚨",
+            )
+
+
+def display_ner(name_file: str, data_json: dict) -> None:
     """
     Visualizing the entity recognizer of the edited json.
 
     Parameters
     ----------
+    name_file: str
+        The name of the json file.
     data_json: dict
         The original json file.
-    json_edit: dict
-        The edited json file.
     """
+    size_entity = len(data_json["annotations"][0][1]["entities"])
     # Colors for the entities
     colors = {
         "TEMPERATURE": "#FF0000",
@@ -28,21 +48,61 @@ def display_ner(data_json: dict, json_edit: dict):
         "FF & MODEL": "#00FFFF",
         "MOLECULE": "#FFFF00",
     }
+    if size_entity > 1:
+        entity = data_json["annotations"][0][1]["entities"][
+            st.session_state["selected"] - 1
+        ][2]
+        color_strip = colors[entity].lstrip("#")
+        rgb = "rgba" + str(
+            tuple(
+                int(color_strip[i : i + 2], 16) if i != 1 else 1 for i in (0, 2, 4, 1)
+            )
+        )
+        colors[
+            "SELECTED"
+        ] = f"linear-gradient(180deg, {rgb} 0%, {rgb} 90%, rgba(0,0,0,1) 90%)"
+        data_json["annotations"][0][1]["entities"][st.session_state["selected"] - 1][
+            2
+        ] = "SELECTED"
     options = {
-        "ents": ["TEMPERATURE", "SOFTWARE", "SIMULATION TIME", "MODEL", "MOLECULE"],
+        "ents": [
+            "TEMPERATURE",
+            "SOFTWARE",
+            "SIMULATION TIME",
+            "FF & MODEL",
+            "MOLECULE",
+            "SELECTED",
+        ],
         "colors": colors,
     }
     # Display the entities
     nlp = spacy.blank("en")
-    text, _ = data_json["annotations"][0]
-    example = Example.from_dict(nlp.make_doc(text), json.loads(json_edit))
+    text, annotations = data_json["annotations"][0]  # annotations = dict
+    doc = nlp.make_doc(text)
+    review_annotation = []
+    for start, end, label in annotations["entities"]:
+        span = doc.char_span(start, end, label=label, alignment_mode="contract")
+        if span is None:
+            st.error(
+                f'Skipping entity: The word "{text[start:end]}" ({start}, {end}) can\'t be aligned',
+                icon="🚨",
+            )
+        else:
+            review_annotation.append([start, end, label])
+    example = Example.from_dict(doc, {"entities": review_annotation})
+    st.write("Json file: ", name_file)
     ent_html = spacy.displacy.render(
         example.reference, style="ent", jupyter=False, options=options
     )
     st.markdown(ent_html, unsafe_allow_html=True)
+    st.write("\n")
+    if size_entity > 1:
+        data_json["annotations"][0][1]["entities"][st.session_state["selected"] - 1][
+            2
+        ] = entity
 
 
-def found_entity(to_found, text, entities):
+def found_entity(to_found: str, text: str, entities: list) -> tuple or None:
     """
     Find the entity in the text.
 
@@ -57,7 +117,7 @@ def found_entity(to_found, text, entities):
 
     Returns
     -------
-    tuple
+    tuple or None
         The start and end positions of the entity.
     """
     # Find the entity in the text
@@ -72,113 +132,85 @@ def found_entity(to_found, text, entities):
     return None
 
 
-def display_add_entity(data_json):
-    col_input, col_select, col_send = st.columns([1, 1, 1])
+def display_add_entity(data_json: dict, col_msg: st.columns) -> None:
+    """
+    Display input text, select box and button to add an entity.
+
+    Parameters
+    ----------
+    data_json: dict
+        The original json file.
+    col_msg: st.columns
+        The column where the message will be displayed.
+    """
+    col_input, col_select = st.sidebar.columns([1, 1])
     with col_input:
         to_found = st.text_input(
-            "",
+            "None",
             placeholder="To add an entity, enter the text",
             label_visibility="collapsed",
         )
     with col_select:
         ent = st.selectbox(
-            "",
+            "None",
             data_json["classes"],
             index=0,
             key="select_entity",
             label_visibility="collapsed",
         )
-    with col_send:
-        add = st.button("Add")
+    add = st.sidebar.button("Add")
     if add:
         positions = found_entity(
             to_found,
             data_json["annotations"][0][0],
             data_json["annotations"][0][1]["entities"],
         )
-        return [positions[0], positions[1], ent] if positions else None
-
-
-def have_text(name_file, col_msg):
-    """
-    Display an error message if the text file does not exist.
-
-    Parameters
-    ----------
-    name_file: str
-        The name of the json file.
-    col_msg: streamlit.columns
-        The column where the message will be displayed.
-    """
-    with col_msg:
-        if not os.path.exists(f"../annotations/{name_file.split('.')[0]}.txt"):
-            st.error(
-                f"The text corresponding to the JSON file {name_file} does not exist !",
-                icon="🚨",
+        if positions is not None:
+            data_json["annotations"][0][1]["entities"].append(
+                [positions[0], positions[1], ent]
             )
+            data_json["annotations"][0][1]["entities"].sort(key=lambda x: x[0])
+        else:
+            with col_msg:
+                st.error(
+                    f"The entity {to_found} is not in the text or exists !",
+                    icon="🚨",
+                )
 
 
-def display_editor(name_file, data_json):
+def display_editor(data_json: dict, col_msg: st.columns) -> None:
     """
-    Display all the elements essential to the correction of the json file.
+    Display all the tools for the correction of the json file.
 
     Parameters
     ----------
-    name_file: str
-        The name of the json file.
     data_json: dict
         The original json file.
-
-    Returns
-    -------
-    tuple
-        The edited json file, a boolean to know if it has been edited and the column of the editor.
+    col_msg: st.columns
+        The column where the message will be displayed.
     """
-    to_add = display_add_entity(data_json)
-    col_editor, col_display = st.columns([1, 2])
-    # Display the editor
-    with col_editor:
-        if to_add != None:
-            f = open(f"../annotations/{name_file}", "w")
-            data_json["annotations"][0][1]["entities"].append(to_add)
-            save_json = json.dumps(data_json, indent=None)
-            f.write(save_json)
-            f.close()
-        ent_json = json.dumps(data_json["annotations"][0][1], indent=4)
-        new_json = st.text_area(
-            "JSON Editor",
-            ent_json,
-            height=600,
+    st.sidebar.title("Editor")
+    size_entity = len(data_json["annotations"][0][1]["entities"])
+    if size_entity > 1:
+        st.session_state["selected"] = st.sidebar.slider(
+            "Choose an entity:",
+            1,
+            len(data_json["annotations"][0][1]["entities"]),
+            1,
         )
-    # Display the entities
-    with col_display:
-        try:
-            st.markdown(
-                f"<p class='font-label'>JSON preview : {name_file}</p>",
-                unsafe_allow_html=True,
+    else:
+        st.session_state["selected"] = size_entity
+    if st.session_state["selected"] > 0:
+        remove = st.sidebar.button("Remove entity")
+        if remove:
+            data_json["annotations"][0][1]["entities"].pop(
+                st.session_state["selected"] - 1
             )
-            display_ner(data_json, new_json)
-        except Exception:
-            st.error("This json is not well written !", icon="🚨")
-            return ent_json, False, col_editor
-    return new_json, new_json != ent_json, col_editor
+            st.session_state["selected"] -= 1
+    display_add_entity(data_json, col_msg)
 
 
-def display_infos(json_files, text_files):
-    """
-    Display the number of json files found and the number of text files found.
-
-    Parameters
-    ----------
-    json_files: list
-        The list of json name files.
-    text_files: list
-        The list of text name files.
-    """
-    st.sidebar.write(len(json_files), "/", len(text_files), "json files found.")
-
-
-def display_filters(json_files):
+def display_filters(json_files: list) -> str:
     """
     Display the filters to select the json file to correct.
 
@@ -194,11 +226,11 @@ def display_filters(json_files):
     """
     if len(json_files) > 1:
         st.sidebar.title("Filters")
-        select_json = st.sidebar.slider(
-            "Choose a JSON file to correct:", 1, len(json_files), 1
-        )
         search_json = st.sidebar.text_input(
             "Enter a JSON file name:", placeholder="Example : zenodo_838635.json"
+        )
+        select_json = st.sidebar.slider(
+            "Choose a JSON file to correct:", 1, len(json_files), 1
         )
         if search_json:
             path_name = "../annotations/" + search_json
@@ -209,7 +241,43 @@ def display_filters(json_files):
     return path_name
 
 
-def load_css():
+def save_json(path_name: str, data_json: dict) -> None:
+    """
+    Save the edited json file.
+
+    Parameters
+    ----------
+    path_name: str
+        The path of the json file to correct.
+    data_json: dict
+        The modified json file to save.
+    """
+    with open(path_name, "r+") as f:
+        save_json = json.dumps(data_json, indent=None)
+        f.seek(0)
+        f.write(save_json)
+        f.truncate()
+
+
+def display_remove_json(path_name: str, col_msg: st.columns) -> None:
+    """
+    Remove the json file.
+
+    Parameters
+    ----------
+    path_name: str
+        The path of the json file to correct.
+    col_msg: st.columns
+        The column where the message will be displayed.
+    """
+    remove = st.button("Remove json file")
+    if remove:
+        os.remove(path_name)
+        with col_msg:
+            st.success("JSON file removed !", icon="✅")
+
+
+def load_css() -> None:
     """Load a css style."""
     st.markdown(
         """
@@ -222,92 +290,46 @@ def load_css():
                     .font-label {
                         font-size: 14px !important;
                     }
+                    
+                    mark > span {
+                        
+                    }
                 </style>
                 """,
         unsafe_allow_html=True,
     )
 
 
-def save_json(data_json, new_json, path_name, edited, col_msg):
-    """
-    Save the edited json file.
-
-    Parameters
-    ----------
-    data_json: dict
-        The original json file.
-    new_json: str
-        The edited json file.
-    path_name: str
-        The path of the json file to correct.
-    edited: bool
-        A boolean to know if it has been edited.
-    col_msg: streamlit.columns
-        The column where the message will be displayed.
-    """
-    save = st.button("Save", disabled=not edited)
-    if save:
-        f = open(path_name, "w")
-        ent_save = re.sub("\n| ", "", new_json)
-        data_json["annotations"][0][1] = json.loads(ent_save)
-        save_json = json.dumps(data_json, indent=None)
-        f.write(save_json)
-        f.close()
-        with col_msg:
-            st.success("JSON file saved !", icon="✅")
-
-
-def remove_json(path_name, col_msg):
-    """
-    Remove the json file.
-
-    Parameters
-    ----------
-    path_name: str
-        The path of the json file to correct.
-    col_msg: streamlit.columns
-        The column where the message will be displayed.
-    """
-    remove = st.button("Remove")
-    if remove:
-        os.remove(path_name)
-        with col_msg:
-            st.success("JSON file removed !", icon="✅")
-
-
-def user_interaction():
+def user_interaction() -> None:
     """Control the streamlit application.
 
     Allows interaction between the user and the set of json files.
     """
     st.set_page_config(page_title="JSON Corrector", layout="wide")
+    os.chdir(os.path.split(os.path.abspath(__file__))[0])
     load_css()
     st.title("JSON Corrector")
     col_msg, _ = st.columns([2, 1])
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
     path = "../annotations/"
     json_files = [
         file.split("/")[-1].split(".")[0] for file in glob.glob(path + "*.json")
     ]
-    text_files = [
-        file.split("/")[-1].split(".")[0] for file in glob.glob(path + "*.txt")
-    ]
     if json_files:
-        display_infos(json_files, text_files)
+        # Display filters and select the json file to correct
         path_name = display_filters(json_files)
-        f = open(path_name, "r")
-        data_json = json.load(f)
-        f.close()
         name_file = path_name.split("/")[-1]
-        have_text(name_file, col_msg)
-        st.sidebar.write(name_file)
-        new_json, edited, col_editor = display_editor(name_file, data_json)
-        with col_editor:
-            col_save, col_remove, _, _ = st.columns([1, 1, 1, 1])
-            with col_save:
-                save_json(data_json, new_json, path_name, edited, col_msg)
-            with col_remove:
-                remove_json(path_name, col_msg)
+        with open(path_name, "r") as f:
+            data_json = json.load(f)
+        # Display if the json has dedicated text file
+        display_have_text(name_file, col_msg)
+        # Display editor tools and get the selected entity
+        display_editor(data_json, col_msg)
+        # Display spacy visualizer
+        display_ner(name_file, data_json)
+        # Display remove json file button
+        display_remove_json(path_name, col_msg)
+        # Save the json file automatically
+        save_json(path_name, data_json)
     else:
         with col_msg:
             st.error("No JSON file found !", icon="🚨")
