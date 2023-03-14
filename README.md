@@ -73,10 +73,28 @@ options:
   -c, --clear  Clear the annotation.
 ```
 
-Annotating json files requires manual annotation and must be in the `annotations` folder. Use the JSON Corrector to annotate and edit json files by typing the following command :
+Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `JSON Corrector` to annotate and edit json files by typing the following command :
 
 ```
 streamlit run scripts/JSON_Corrector.py
 ```
 
 Here is a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/)
+
+## Create a MDNER
+
+Create the `mdner`:
+
+```
+python3 scripts/mdner.py -c
+```
+
+## Use the MDNER
+
+Lauch the `mdner` :
+
+```
+python3 scripts/mdner.py -p predictions.txt
+```
+
+The text should be in the `results/outputs/` folder
