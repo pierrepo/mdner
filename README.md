@@ -26,7 +26,7 @@ conda install mamba -n base -c conda-forge
 Create the `mdner` conda environment:
 
 ```
-mamba env create -f env/environment.yml
+mamba env create -f binder/environment.yml
 ```
 
 Load the `mdner` conda environment:
@@ -51,9 +51,7 @@ conda deactivate
 
 Generate json files for spaCy NER and text files containing titles and descriptions of our MD datasets available [here](https://sandbox.zenodo.org/record/1171298).
 
-### Generate text files
-
-Launch the generation of text files :
+Launch the generation of text files and json files :
 
 ```
 python3 scripts/generate_annotation.py
@@ -75,12 +73,10 @@ options:
   -c, --clear  Clear the annotation.
 ```
 
-### Generate json files
-
-Annotating json files requires manual annotation and must be in the `annotations` folder. Here is a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/)
-
-Edit the json files :
+Annotating json files requires manual annotation and must be in the `annotations` folder. Use the JSON Corrector to annotate and edit json files by typing the following command :
 
 ```
 streamlit run scripts/JSON_Corrector.py
 ```
+
+Here is a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/)
