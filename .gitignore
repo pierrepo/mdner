@@ -1,9 +1,3 @@
-# spaCy
-.cfg
-.spacy
-model-best/
-model-last/
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
