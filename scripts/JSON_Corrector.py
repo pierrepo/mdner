@@ -80,6 +80,7 @@ def display_ner(name_file: str, data_json: dict) -> None:
     text, annotations = data_json["annotations"][0]  # annotations = dict
     doc = nlp.make_doc(text)
     review_annotation = []
+    spans = []
     for start, end, label in annotations["entities"]:
         span = doc.char_span(start, end, label=label, alignment_mode="contract")
         if span is None:
@@ -89,6 +90,8 @@ def display_ner(name_file: str, data_json: dict) -> None:
             )
         else:
             review_annotation.append([start, end, label])
+            spans.append(span)
+    doc.ents = spans
     example = Example.from_dict(doc, {"entities": review_annotation})
     st.write("Json file: ", name_file)
     ent_html = spacy.displacy.render(
