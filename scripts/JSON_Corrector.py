@@ -300,6 +300,7 @@ def user_interaction():
         f.close()
         name_file = path_name.split("/")[-1]
         have_text(name_file, col_msg)
+        st.sidebar.write(name_file)
         new_json, edited, col_editor = display_editor(name_file, data_json)
         with col_editor:
             col_save, col_remove, _, _ = st.columns([1, 1, 1, 1])
