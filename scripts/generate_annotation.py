@@ -8,6 +8,7 @@ from tqdm import tqdm
 import argparse
 import glob
 import os
+import json
 
 
 parser = argparse.ArgumentParser(
@@ -191,6 +192,25 @@ def create_annotation(df: pd.DataFrame):
             "w",
         ) as f:
             f.write(df.loc[i, "annotation"])
+        with open(
+            path
+            + df.loc[i, "dataset_origin"]
+            + "_"
+            + df.loc[i, "dataset_id"]
+            + ".json",
+            "w",
+        ) as json_file:
+            dict_annotations = {
+                "classes": [
+                    "TEMPERATURE",
+                    "SOFTWARE",
+                    "SIMULATION TIME",
+                    "MOLECULE",
+                    "FF & MODEL",
+                ],
+                "annotations": [[df.loc[i, "annotation"], {"entities": []}]],
+            }
+            json.dump(dict_annotations, json_file)
 
 
 def generate_annotation(threshold: int, cutoff: float):
