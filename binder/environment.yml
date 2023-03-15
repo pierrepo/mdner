@@ -21,6 +21,7 @@ dependencies:
   - pip:
       - watermark
       - spacy
+      - spacy-transformers
       - tqdm
       - matplotlib
       - spicy
