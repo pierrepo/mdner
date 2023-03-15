@@ -1,4 +1,4 @@
-"""Script generating a set of text files to be used as learning sets."""
+"""Script generating a set of text and json files to be used as learning sets."""
 
 import pandas as pd
 import numpy as np
@@ -12,7 +12,7 @@ import json
 
 
 parser = argparse.ArgumentParser(
-    description="Generate text files containing the title and description of the dataset in the annotation folder."
+    description="Generate text and json files in the annotation folder to be used as learning sets."
 )
 parser.add_argument("-c", "--clear", help="Clear the annotation.", action="store_true")
 parser.add_argument(
