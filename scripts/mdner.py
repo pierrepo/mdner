@@ -11,12 +11,22 @@ from random import sample
 
 
 parser = argparse.ArgumentParser(
-    description="Generate text files containing the title and description of the dataset in the annotation folder."
+    description="Create or call a model for the molecular dynamics data."
 )
-parser.add_argument(
-    "-p", "--predict", help="Predict data from an existing model", nargs="?"
+group = parser.add_mutually_exclusive_group()
+group.add_argument(
+    "-p",
+    "--predict",
+    help="Call an existing model and extracts the MD information which can be viewed via a link. A path of a text file is required from this file.",
+    type=str,
+    nargs=1,
 )
-parser.add_argument("-c", "--create", help="Create a NER model", action="store_true")
+group.add_argument(
+    "-c",
+    "--create",
+    help="Create a dedicated Named Entity Recognition model for our molecular dynamics data.",
+    action="store_true",
+)
 args = parser.parse_args()
 
 # /!\ add independent dataset for training
@@ -40,19 +50,18 @@ def create_data(is_train: bool):
 
 
 def create_spacy_object(data, is_train: bool):
-    nlp = spacy.blank("en")  # load a new spacy model
-    db = DocBin()  # create a DocBin object
-    # data in previous format
+    nlp = spacy.blank("en")  # Load a new spacy model
+    db = DocBin()  # Create a DocBin object
     description = "Spacy training object" if is_train else "Spacy testing object"
     annotations = tqdm(data["annotations"], desc=description)
     for text, annot in annotations:
-        doc = nlp.make_doc(text)  # create doc object from text
+        doc = nlp.make_doc(text)  # Create doc object from text
         ents = []
-        for start, end, label in annot["entities"]:  # add character indexes
+        for start, end, label in annot["entities"]:  # Add character indexes
             span = doc.char_span(start, end, label=label, alignment_mode="contract")
             if not span is None:
                 ents.append(span)
-        doc.ents = ents  # label the text with the ents
+        doc.ents = ents  # Label the text with the ents
         db.add(doc)
     if is_train:
         db.to_disk("../results/outputs/train_data.spacy")
@@ -76,11 +85,11 @@ if __name__ == "__main__":
     elif args.predict:
         nlp_ner = spacy.load("../results/models/model-last")
         # Text processing by our NER
-        path_file = "../results/outputs/" + args.predict
+        path_file = args.predict[0]
         if os.path.isfile(path_file):
             with open(path_file, "r") as f:
                 text = f.read()
             doc = nlp_ner(text)
             displacy.serve(doc, style="ent")
         else:
-            print("File not found !")
+            print("[ERROR] Cannot find the path specified.")
