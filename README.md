@@ -79,7 +79,7 @@ Annotating json files requires manual annotation and must be in the `annotations
 streamlit run scripts/JSON_Corrector.py
 ```
 
-Here is a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/)
+There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/)
 
 ## Create a MDNER
 
