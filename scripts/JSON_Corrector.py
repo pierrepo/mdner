@@ -150,13 +150,12 @@ def display_add_entity(data_json: dict, col_msg: st.columns) -> None:
         """<p class="font-label"> Add an entity: </p>""",
         unsafe_allow_html=True,
     )
-    col_input, col_select = st.sidebar.columns([1, 1])
-    with col_input:
-        to_found = st.text_input(
-            "None",
-            placeholder="To add an entity, enter the text",
-            label_visibility="collapsed",
-        )
+    to_found = st.sidebar.text_input(
+        "None",
+        placeholder="To add an entity, enter the text",
+        label_visibility="collapsed",
+    )
+    col_select, col_add = st.sidebar.columns([1, 1])
     with col_select:
         ent = st.selectbox(
             "None",
@@ -165,27 +164,28 @@ def display_add_entity(data_json: dict, col_msg: st.columns) -> None:
             key="select_entity",
             label_visibility="collapsed",
         )
-    add = st.sidebar.button("Add")
-    if add:
-        positions = found_entity(
-            to_found,
-            data_json["annotations"][0][0],
-            data_json["annotations"][0][1]["entities"],
-        )
-        if positions is not None:
-            data_json["annotations"][0][1]["entities"].append(
-                [positions[0], positions[1], ent]
+    with col_add:
+        add = st.button("Add")
+        if add:
+            positions = found_entity(
+                to_found,
+                data_json["annotations"][0][0],
+                data_json["annotations"][0][1]["entities"],
             )
-            data_json["annotations"][0][1]["entities"].sort(key=lambda x: x[0])
-        else:
-            with col_msg:
-                st.error(
-                    f"The entity {to_found} is not in the text or exists !",
-                    icon="🚨",
+            if positions is not None:
+                data_json["annotations"][0][1]["entities"].append(
+                    [positions[0], positions[1], ent]
                 )
+                data_json["annotations"][0][1]["entities"].sort(key=lambda x: x[0])
+            else:
+                with col_msg:
+                    st.error(
+                        f"The entity {to_found} is not in the text or exists !",
+                        icon="🚨",
+                    )
 
 
-def change_cursor(minus: bool, slider_json: bool, slider_json_changed: bool):
+def change_cursor(minus: bool, slider_json: bool):
     """
     Change the cursor of a specific slider.
 
@@ -195,22 +195,18 @@ def change_cursor(minus: bool, slider_json: bool, slider_json_changed: bool):
         If the cursor is on the minus button.
     slider_json: bool
         If the cursor is on the slider_json.
-    slider_json_changed: bool
-        If the slider_json has changed.
     """
-    if slider_json_changed:
-        st.session_state.slider_entity = 1
-    else:
-        if slider_json:
-            if minus:
-                st.session_state.slider_json = st.session_state.slider_json - 1
-            else:
-                st.session_state.slider_json = st.session_state.slider_json + 1
+    if slider_json:
+        if minus:
+            st.session_state.slider_json = st.session_state.slider_json - 1
         else:
-            if minus:
-                st.session_state.slider_entity = st.session_state.slider_entity - 1
-            else:
-                st.session_state.slider_entity = st.session_state.slider_entity + 1
+            st.session_state.slider_json = st.session_state.slider_json + 1
+        update_selected_entity()
+    else:
+        if minus:
+            st.session_state.slider_entity = st.session_state.slider_entity - 1
+        else:
+            st.session_state.slider_entity = st.session_state.slider_entity + 1
 
 
 def entity_selector(size_entity: int, data_json: dict):
@@ -230,13 +226,16 @@ def entity_selector(size_entity: int, data_json: dict):
         """<p class="font-label"> Choose an entity: </p>""",
         unsafe_allow_html=True,
     )
-    select_minus, select_slider, select_plus = st.sidebar.columns([1, 3, 1])
+    select_minus, select_slider, select_plus = st.sidebar.columns([1, 8, 1])
     with select_minus:
         st.button(
             "◀",
             key="minus_entity",
             on_click=change_cursor,
-            args=(True, False, False),
+            args=(
+                True,
+                False,
+            ),
             disabled=(st.session_state.slider_entity <= 1),
             use_container_width=True,
         )
@@ -245,7 +244,10 @@ def entity_selector(size_entity: int, data_json: dict):
             "▶",
             key="plus_entity",
             on_click=change_cursor,
-            args=(False, False, False),
+            args=(
+                False,
+                False,
+            ),
             disabled=(st.session_state.slider_entity >= size_entity),
             use_container_width=True,
         )
@@ -294,6 +296,11 @@ def json_search():
     return search_json
 
 
+def update_selected_entity():
+    """Update the value of the entity slider when the json slider is changed."""
+    st.session_state.slider_entity = 1
+
+
 def json_selector(json_files: list):
     """
     Select a json file in the data folder with a slider.
@@ -309,27 +316,25 @@ def json_selector(json_files: list):
         """<p class="font-label"> Choose a JSON file to correct: </p>""",
         unsafe_allow_html=True,
     )
-    select_minus, select_slider, select_plus = st.sidebar.columns([1, 3, 1])
+    select_minus, select_slider, select_plus = st.sidebar.columns([1, 8, 1])
     with select_minus:
         st.button(
-            "➖",
+            "◀",
             on_click=change_cursor,
             args=(
                 True,
                 True,
-                False,
             ),
             disabled=st.session_state.slider_json <= 1,
             use_container_width=True,
         )
     with select_plus:
         st.button(
-            "➕",
+            "▶",
             on_click=change_cursor,
             args=(
                 False,
                 True,
-                False,
             ),
             disabled=st.session_state.slider_json >= len(json_files),
             use_container_width=True,
@@ -341,8 +346,7 @@ def json_selector(json_files: list):
             max_value=len(json_files),
             label_visibility="collapsed",
             key="slider_json",
-            on_change=change_cursor,
-            args=(False, True, True),
+            on_change=update_selected_entity,
         )
 
 
@@ -438,10 +442,10 @@ def user_interaction() -> None:
 
     Allows interaction between the user and the set of json files.
     """
-    st.set_page_config(page_title="JSON Corrector", layout="wide")
+    st.set_page_config(page_title="Entity Annotator", layout="wide")
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     load_css()
-    st.title("JSON Corrector")
+    st.title("Entity Annotator")
     col_msg, _ = st.columns([2, 1])
     path = "../annotations/"
     json_files = [
