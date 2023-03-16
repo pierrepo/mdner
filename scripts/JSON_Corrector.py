@@ -39,6 +39,7 @@ def display_ner(name_file: str, data_json: dict) -> None:
     data_json: dict
         The original json file.
     """
+    st.write("Json file: ", name_file)
     size_entity = len(data_json["annotations"][0][1]["entities"])
     # Colors for the entities
     colors = {
@@ -93,7 +94,6 @@ def display_ner(name_file: str, data_json: dict) -> None:
             spans.append(span)
     doc.ents = spans
     example = Example.from_dict(doc, {"entities": review_annotation})
-    st.write("Json file: ", name_file)
     ent_html = spacy.displacy.render(
         example.reference, style="ent", jupyter=False, options=options
     )
@@ -146,6 +146,10 @@ def display_add_entity(data_json: dict, col_msg: st.columns) -> None:
     col_msg: st.columns
         The column where the message will be displayed.
     """
+    st.sidebar.markdown(
+        """<p class="font-label"> Add an entity: </p>""",
+        unsafe_allow_html=True,
+    )
     col_input, col_select = st.sidebar.columns([1, 1])
     with col_input:
         to_found = st.text_input(
@@ -181,6 +185,80 @@ def display_add_entity(data_json: dict, col_msg: st.columns) -> None:
                 )
 
 
+def change_cursor(minus: bool, slider_json: bool, slider_json_changed: bool):
+    """
+    Change the cursor of a specific slider.
+
+    Parameters
+    ----------
+    minus: bool
+        If the cursor is on the minus button.
+    slider_json: bool
+        If the cursor is on the slider_json.
+    slider_json_changed: bool
+        If the slider_json has changed.
+    """
+    if slider_json_changed:
+        st.session_state.slider_entity = 1
+    else:
+        if slider_json:
+            if minus:
+                st.session_state.slider_json = st.session_state.slider_json - 1
+            else:
+                st.session_state.slider_json = st.session_state.slider_json + 1
+        else:
+            if minus:
+                st.session_state.slider_entity = st.session_state.slider_entity - 1
+            else:
+                st.session_state.slider_entity = st.session_state.slider_entity + 1
+
+
+def entity_selector(size_entity: int, data_json: dict):
+    """
+    Select an entity in the json file.
+
+    Parameters
+    ----------
+    size_entity: int
+        The number of entities in the json file.
+    data_json: dict
+        The json file.
+    """
+    if "slider_entity" not in st.session_state:
+        st.session_state.slider_entity = 1
+    st.sidebar.markdown(
+        """<p class="font-label"> Choose an entity: </p>""",
+        unsafe_allow_html=True,
+    )
+    select_minus, select_slider, select_plus = st.sidebar.columns([1, 3, 1])
+    with select_minus:
+        st.button(
+            "◀",
+            key="minus_entity",
+            on_click=change_cursor,
+            args=(True, False, False),
+            disabled=(st.session_state.slider_entity <= 1),
+            use_container_width=True,
+        )
+    with select_plus:
+        st.button(
+            "▶",
+            key="plus_entity",
+            on_click=change_cursor,
+            args=(False, False, False),
+            disabled=(st.session_state.slider_entity >= size_entity),
+            use_container_width=True,
+        )
+    with select_slider:
+        st.session_state["selected"] = st.slider(
+            "Choose an entity:",
+            min_value=1,
+            max_value=len(data_json["annotations"][0][1]["entities"]),
+            label_visibility="collapsed",
+            key="slider_entity",
+        )
+
+
 def display_editor(data_json: dict, col_msg: st.columns) -> None:
     """
     Display all the tools for the correction of the json file.
@@ -195,12 +273,7 @@ def display_editor(data_json: dict, col_msg: st.columns) -> None:
     st.sidebar.title("Editor")
     size_entity = len(data_json["annotations"][0][1]["entities"])
     if size_entity > 1:
-        st.session_state["selected"] = st.sidebar.slider(
-            "Choose an entity:",
-            1,
-            len(data_json["annotations"][0][1]["entities"]),
-            1,
-        )
+        entity_selector(size_entity, data_json)
     else:
         st.session_state["selected"] = size_entity
     if st.session_state["selected"] > 0:
@@ -211,6 +284,66 @@ def display_editor(data_json: dict, col_msg: st.columns) -> None:
             )
             st.session_state["selected"] -= 1
     display_add_entity(data_json, col_msg)
+
+
+def json_search():
+    """Search a json file in the data folder."""
+    search_json = st.sidebar.text_input(
+        "Enter a JSON file name:", placeholder="Example : zenodo_838635.json"
+    )
+    return search_json
+
+
+def json_selector(json_files: list):
+    """
+    Select a json file in the data folder with a slider.
+
+    Parameters
+    ----------
+    json_files: list
+        The list of json files in the data folder.
+    """
+    if "slider_json" not in st.session_state:
+        st.session_state.slider_json = 1
+    st.sidebar.markdown(
+        """<p class="font-label"> Choose a JSON file to correct: </p>""",
+        unsafe_allow_html=True,
+    )
+    select_minus, select_slider, select_plus = st.sidebar.columns([1, 3, 1])
+    with select_minus:
+        st.button(
+            "➖",
+            on_click=change_cursor,
+            args=(
+                True,
+                True,
+                False,
+            ),
+            disabled=st.session_state.slider_json <= 1,
+            use_container_width=True,
+        )
+    with select_plus:
+        st.button(
+            "➕",
+            on_click=change_cursor,
+            args=(
+                False,
+                True,
+                False,
+            ),
+            disabled=st.session_state.slider_json >= len(json_files),
+            use_container_width=True,
+        )
+    with select_slider:
+        st.slider(
+            "Choose a JSON file to correct:",
+            min_value=1,
+            max_value=len(json_files),
+            label_visibility="collapsed",
+            key="slider_json",
+            on_change=change_cursor,
+            args=(False, True, True),
+        )
 
 
 def display_filters(json_files: list) -> str:
@@ -229,16 +362,16 @@ def display_filters(json_files: list) -> str:
     """
     if len(json_files) > 1:
         st.sidebar.title("Filters")
-        search_json = st.sidebar.text_input(
-            "Enter a JSON file name:", placeholder="Example : zenodo_838635.json"
-        )
-        select_json = st.sidebar.slider(
-            "Choose a JSON file to correct:", 1, len(json_files), 1
-        )
+        search_json = json_search()
+        json_selector(json_files)
         if search_json:
             path_name = "../annotations/" + search_json
         else:
-            path_name = "../annotations/" + json_files[select_json - 1] + ".json"
+            path_name = (
+                "../annotations/"
+                + json_files[st.session_state.slider_json - 1]
+                + ".json"
+            )
     else:
         path_name = "../annotations/" + json_files[0] + ".json"
     return path_name
@@ -284,21 +417,18 @@ def load_css() -> None:
     """Load a css style."""
     st.markdown(
         """
-                <style>
-                    .block-container:first-of-type {
-                        padding-top: 20px;
-                        padding-left: 20px;
-                        padding-right: 20px;
-                    }
-                    .font-label {
-                        font-size: 14px !important;
-                    }
-                    
-                    mark > span {
-                        
-                    }
-                </style>
-                """,
+            <style>
+                .block-container:first-of-type {
+                    padding-top: 20px;
+                    padding-left: 20px;
+                    padding-right: 20px;
+                }
+                
+                .font-label {
+                    font-size: 14px !important;
+                }
+            </style>
+        """,
         unsafe_allow_html=True,
     )
 
@@ -319,6 +449,8 @@ def user_interaction() -> None:
     ]
     if json_files:
         # Display filters and select the json file to correct
+        if "selected" not in st.session_state:
+            st.session_state["selected"] = 1  # session_state for the selected entity
         path_name = display_filters(json_files)
         name_file = path_name.split("/")[-1]
         with open(path_name, "r") as f:
