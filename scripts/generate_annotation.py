@@ -9,7 +9,8 @@ import glob
 import os
 import json
 from datetime import datetime
-
+import unicodedata
+import re
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as learning sets."
@@ -75,6 +76,7 @@ def description_length(df: pd.DataFrame, threshold: float):
         df = df.dropna(subset=["description_length", "title", "description"])
     data = df[df["description_length"] > threshold]
     print(f"[{datetime.now()}] [INFO] Number of description : ", data.shape[0])
+    data = data.drop(columns=["description_length"], inplace=True)
     data.reset_index(drop=True, inplace=True)
     return data
 
@@ -143,31 +145,37 @@ def corpus_similarity(df: pd.DataFrame, cutoff: float):
         f"[{datetime.now()}] [INFO] Number of description : ",
         data.shape[0],
     )
+    data = data.drop(columns=["corpus"], inplace=True)
     data.reset_index(drop=True, inplace=True)
     return data
 
 
-def clear_annotation(df: pd.DataFrame):
+def clear_annotation(annotation: str):
     """
-    Remove some characters and urls from the annotation.
+    Remove some characters from the annotation.
 
     Parameters
     ----------
-    df: pandas.DataFrame
-        A datasets.
+    annotation: str
+        A annotation containing title and description.
 
     Returns
     -------
-    pandas.DataFrame
-        The selected datasets.
+    str
+        The annotation without cleared characters.
     """
-    df = df.replace("_", " ", regex=True)
-    df["annotation"] = df["annotation"].str.replace(
-        r'https?://[^\s<>"]+|www\.[^\s<>"]+',
-        "https://removed",
-        regex=True,
-    )
-    return df
+    # Replace _ by space
+    annotation = annotation.replace("_", " ")
+    # Add space between a character and a parenthesis
+    annotation = re.sub(r"([^ ])(\()", r"\1 \2", annotation)
+    # Remove special characters (unicode normalization)
+    annotation = unicodedata.normalize("NFKD", annotation)
+    # Replace multiple special characters by a space
+    annotation = re.sub(r"[– ]+", " ", annotation)
+    annotation = re.sub("=+", " ", annotation)
+    # Replace accentuated characters by their non-accentuated version
+    annotation = re.sub("`|’", "'", annotation)
+    return annotation
 
 
 def create_annotation(df: pd.DataFrame):
@@ -234,7 +242,9 @@ def generate_annotation(threshold: int, cutoff: float):
     # Setup and cleaning up the annotation
     df = df_composition[["dataset_id", "dataset_origin"]]
     df = df.copy()
-    df["annotation"] = df_composition["title"] + " " + df_composition["description"]
+    df["annotation"] = df_composition["title"] + "\n" + df_composition["description"]
+    # Clear the annotation
+    df["annotation"] = df["annotation"].apply(clear_annotation)
     # Write the annotations in files
     create_annotation(df)
     print(f"[{datetime.now()}] [INFO] Generation completed")
