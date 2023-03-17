@@ -488,8 +488,6 @@ def user_interaction() -> None:
         display_editor(data_json, col_msg)
         # Display spacy visualizer
         display_ner(name_file, data_json, path_name, col_msg)
-        # Display remove json file button
-        # display_remove_json(path_name, col_msg)
         # Save the json file automatically
         save_json(path_name, data_json)
     else:
