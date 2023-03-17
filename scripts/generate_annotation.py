@@ -4,11 +4,11 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from tqdm import tqdm
 import argparse
 import glob
 import os
 import json
+from datetime import datetime
 
 
 parser = argparse.ArgumentParser(
@@ -19,7 +19,7 @@ parser.add_argument(
     "threshold",
     help="The threshold for the description length.",
     nargs="?",
-    default=600,
+    default=594,
 )
 parser.add_argument(
     "cutoff",
@@ -74,7 +74,7 @@ def description_length(df: pd.DataFrame, threshold: float):
     if df["description_length"].isnull().values.any():
         df = df.dropna(subset=["description_length", "title", "description"])
     data = df[df["description_length"] > threshold]
-    print("[Func. description_length] Number of description : ", data.shape[0])
+    print(f"[{datetime.now()}] [INFO] Number of description : ", data.shape[0])
     data.reset_index(drop=True, inplace=True)
     return data
 
@@ -100,7 +100,7 @@ def homogeneous_composition(df: pd.DataFrame):
     sample_protein = protein_data.sample(n=size_sample)
     data = pd.concat([sample_lipid, sample_protein], ignore_index=True)
     print(
-        "[Func. homogeneous_composition] Number of description : ",
+        f"[{datetime.now()}] [INFO] Number of description : ",
         data.shape[0],
     )
     data.reset_index(drop=True, inplace=True)
@@ -140,7 +140,7 @@ def corpus_similarity(df: pd.DataFrame, cutoff: float):
     else:
         data = df
     print(
-        "[Func. corpus_similarity] Number of description : ",
+        f"[{datetime.now()}] [INFO] Number of description : ",
         data.shape[0],
     )
     data.reset_index(drop=True, inplace=True)
@@ -185,8 +185,8 @@ def create_annotation(df: pd.DataFrame):
         The selected datasets.
     """
     path = "../annotations/"
-    print("Writing annotations in files...")
-    for i in tqdm(range(len(df))):
+    print(f"[{datetime.now()}] [INFO] Writing annotations in files ...")
+    for i in range(len(df)):
         with open(
             path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"] + ".txt",
             "w",
@@ -235,10 +235,9 @@ def generate_annotation(threshold: int, cutoff: float):
     df = df_composition[["dataset_id", "dataset_origin"]]
     df = df.copy()
     df["annotation"] = df_composition["title"] + " " + df_composition["description"]
-    data = clear_annotation(df)
     # Write the annotations in files
-    create_annotation(data)
-    print("Done !")
+    create_annotation(df)
+    print(f"[{datetime.now()}] [INFO] Generation completed")
 
 
 def clear_folder():
@@ -247,7 +246,7 @@ def clear_folder():
     files = glob.glob(path + "*.txt")
     for f in files:
         os.remove(f)
-    print("Folder cleared !")
+    print(f"[{datetime.now()}] [INFO] Folder cleared")
 
 
 if __name__ == "__main__":
