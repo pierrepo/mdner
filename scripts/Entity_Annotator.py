@@ -7,6 +7,7 @@ from spacy.training import Example
 import re
 import glob
 import os
+import pandas as pd
 
 
 def display_have_text(name_file: str, col_msg: st.columns) -> None:
@@ -28,7 +29,9 @@ def display_have_text(name_file: str, col_msg: st.columns) -> None:
             )
 
 
-def display_ner(name_file: str, data_json: dict) -> None:
+def display_ner(
+    name_file: str, data_json: dict, path_name: str, col_msg: st.columns
+) -> None:
     """
     Visualizing the entity recognizer of the edited json.
 
@@ -38,6 +41,10 @@ def display_ner(name_file: str, data_json: dict) -> None:
         The name of the json file.
     data_json: dict
         The original json file.
+    path_name: str
+        The path of the json file.
+    col_msg: st.columns
+        The column where the message will be displayed.
     """
     st.write("Json file: ", name_file)
     size_entity = len(data_json["annotations"][0][1]["entities"])
@@ -78,20 +85,34 @@ def display_ner(name_file: str, data_json: dict) -> None:
     }
     # Display the entities
     nlp = spacy.blank("en")
-    text, annotations = data_json["annotations"][0]  # annotations = dict
+    text, annotations = data_json["annotations"][0]
     doc = nlp.make_doc(text)
     review_annotation = []
     spans = []
+    data = pd.DataFrame(columns=["Start", "End", "Label", "Span"])
+    flag_display = False
     for start, end, label in annotations["entities"]:
-        span = doc.char_span(start, end, label=label, alignment_mode="contract")
+        span = doc.char_span(start, end, label=label, alignment_mode="strict")
+        data = pd.concat(
+            [
+                data,
+                pd.DataFrame([[start, end, label, str(span)]], columns=data.columns),
+            ],
+            axis=0,
+        )
         if span is None:
-            st.error(
-                f'Skipping entity: The word "{text[start:end]}" ({start}, {end}) can\'t be aligned',
-                icon="🚨",
-            )
+            flag_display = True
+            with col_msg:
+                st.error(
+                    f'Skipping entity: The word "{text[start:end]}" ({start}, {end}) can\'t be aligned',
+                    icon="🚨",
+                )
         else:
             review_annotation.append([start, end, label])
             spans.append(span)
+    data.set_index("Span", inplace=True)
+    with st.sidebar.expander("Entities"):
+        st.table(data)
     doc.ents = spans
     example = Example.from_dict(doc, {"entities": review_annotation})
     ent_html = spacy.displacy.render(
@@ -99,6 +120,8 @@ def display_ner(name_file: str, data_json: dict) -> None:
     )
     st.markdown(ent_html, unsafe_allow_html=True)
     st.write("\n")
+    if flag_display:
+        display_remove_json(path_name, col_msg)
     if size_entity > 1:
         data_json["annotations"][0][1]["entities"][st.session_state["selected"] - 1][
             2
@@ -457,16 +480,16 @@ def user_interaction() -> None:
             st.session_state["selected"] = 1  # session_state for the selected entity
         path_name = display_filters(json_files)
         name_file = path_name.split("/")[-1]
-        with open(path_name, "r") as f:
+        with open(path_name, "r", encoding="utf-8") as f:
             data_json = json.load(f)
         # Display if the json has dedicated text file
         display_have_text(name_file, col_msg)
         # Display editor tools and get the selected entity
         display_editor(data_json, col_msg)
         # Display spacy visualizer
-        display_ner(name_file, data_json)
+        display_ner(name_file, data_json, path_name, col_msg)
         # Display remove json file button
-        display_remove_json(path_name, col_msg)
+        # display_remove_json(path_name, col_msg)
         # Save the json file automatically
         save_json(path_name, data_json)
     else:
