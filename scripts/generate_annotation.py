@@ -52,10 +52,11 @@ def load_data():
         on=["dataset_id", "dataset_origin"],
         validate="many_to_one",
     )
+    gro_data["description_dataset"] = gro_data["title"] + " " + gro_data["description"]
     return gro_data
 
 
-def description_length(df: pd.DataFrame, threshold: float):
+def description_length(id_selected: list, df: pd.DataFrame, threshold: float):
     """
     Select datasets that have a description length greater than the threshold.
 
@@ -71,17 +72,26 @@ def description_length(df: pd.DataFrame, threshold: float):
     pandas.DataFrame
         The selected datasets.
     """
-    df["description_length"] = df["description"].str.len() + df["title"].str.len()
-    if df["description_length"].isnull().values.any():
-        df = df.dropna(subset=["description_length", "title", "description"])
-    data = df[df["description_length"] > threshold]
-    print(f"[{datetime.now()}] [INFO] Number of description : ", data.shape[0])
-    data = data.drop(columns=["description_length"], inplace=True)
-    data.reset_index(drop=True, inplace=True)
-    return data
+    data = df[df["dataset_id"].isin(id_selected)].copy()
+    # print(len(data))
+    data = data.drop_duplicates("dataset_id")
+    # print(len(data))
+    data.loc[:, "description_length"] = (
+        data["description"].str.len() + data["title"].str.len()
+    )
+    if data["description_length"].isnull().values.any():
+        data = data.dropna(subset=["description_dataset", "description_length"])
+    data = data[data["description_length"] > threshold]
+    selected = data["dataset_id"].tolist()
+    print(
+        f"[{datetime.now()}] [INFO]",
+        len(selected),
+        "descriptions selected according the threshold length",
+    )
+    return selected
 
 
-def homogeneous_composition(df: pd.DataFrame):
+def homogeneous_composition(id_selected, df: pd.DataFrame):
     """
     Select data with protein and lipid homogeneity.
 
@@ -95,21 +105,24 @@ def homogeneous_composition(df: pd.DataFrame):
     pandas.DataFrame
         The selected datasets.
     """
-    lipid_data = df[(df["has_protein"] == False) & (df["has_lipid"] == True)]
-    protein_data = df[(df["has_protein"] == True) & (df["has_lipid"] == False)]
-    size_sample = min(lipid_data.shape[0], protein_data.shape[0])
-    sample_lipid = lipid_data.sample(n=size_sample)
-    sample_protein = protein_data.sample(n=size_sample)
-    data = pd.concat([sample_lipid, sample_protein], ignore_index=True)
-    print(
-        f"[{datetime.now()}] [INFO] Number of description : ",
-        data.shape[0],
+    data = df[df["dataset_id"].isin(id_selected)].copy()
+    data = data.groupby("dataset_id").agg(
+        has_lipid=("has_lipid", "any"),
+        has_protein=("has_protein", "any"),
     )
-    data.reset_index(drop=True, inplace=True)
-    return data
+    size_sample = min(data.sum())
+    lipid_data = data["has_lipid"].sample(n=size_sample)
+    protein_data = data["has_protein"].sample(n=size_sample)
+    selected = set(list(protein_data.index) + list(lipid_data.index))
+    print(
+        f"[{datetime.now()}] [INFO] ",
+        len(selected),
+        " descriptions selected according the composition",
+    )
+    return selected
 
 
-def corpus_similarity(df: pd.DataFrame, cutoff: float):
+def corpus_similarity(id_selected: list, df: pd.DataFrame, cutoff: float):
     """
     Select n data with low similarity to other texts.
 
@@ -125,29 +138,31 @@ def corpus_similarity(df: pd.DataFrame, cutoff: float):
     pandas.DataFrame
         The selected datasets.
     """
-    cols = ["title", "description"]
-    df["corpus"] = df[cols].apply(lambda row: " ".join(row.values.astype(str)), axis=1)
+    data = df[df["dataset_id"].isin(id_selected)].copy()
+    data = data.drop_duplicates("dataset_id")
     vectorizer = TfidfVectorizer()
-    trsfm = vectorizer.fit_transform(df["corpus"])
+    trsfm = vectorizer.fit_transform(data["description_dataset"])
     cos_data = pd.DataFrame(
         [
             cosine_similarity(trsfm[i : i + 1], trsfm)[0]
-            for i in range(len(df["corpus"]))
+            for i in range(len(data["description_dataset"]))
         ]
     )
+    cos_data.index = data.index
+    cos_data.columns = data.index
     if 0.0 <= cutoff <= 1.0:
         np.fill_diagonal(cos_data.values, -1)
         index_remove = cos_data[(cos_data > cutoff).any(axis=1)].index
-        data = df.drop(index=index_remove.tolist(), axis=0)
+        data = data.drop(index=index_remove.tolist(), axis=0)
     else:
         data = df
+    selected = data["dataset_id"]
     print(
-        f"[{datetime.now()}] [INFO] Number of description : ",
-        data.shape[0],
+        f"[{datetime.now()}] [INFO] ",
+        len(selected),
+        " descriptions selected according the corpus similarity",
     )
-    data = data.drop(columns=["corpus"], inplace=True)
-    data.reset_index(drop=True, inplace=True)
-    return data
+    return selected
 
 
 def clear_annotation(annotation: str):
@@ -168,7 +183,7 @@ def clear_annotation(annotation: str):
     annotation = annotation.replace("_", " ")
     # Add space between a character and a parenthesis
     annotation = re.sub(r"([^ ])(\()", r"\1 \2", annotation)
-    # Remove special characters (unicode normalization)
+    # Remove special characters and uniform the form of writing (unicode normalization)
     annotation = unicodedata.normalize("NFKD", annotation)
     # Replace multiple special characters by a space
     annotation = re.sub(r"[– ]+", " ", annotation)
@@ -195,30 +210,30 @@ def create_annotation(df: pd.DataFrame):
     path = "../annotations/"
     print(f"[{datetime.now()}] [INFO] Writing annotations in files ...")
     for i in range(len(df)):
+        path_file = path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"]
         with open(
-            path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"] + ".txt",
+            path_file + ".txt",
             "w",
         ) as f:
-            f.write(df.loc[i, "annotation"])
-        with open(
-            path
-            + df.loc[i, "dataset_origin"]
-            + "_"
-            + df.loc[i, "dataset_id"]
-            + ".json",
-            "w",
-        ) as json_file:
-            dict_annotations = {
-                "classes": [
-                    "TEMPERATURE",
-                    "SOFTWARE",
-                    "SIMULATION TIME",
-                    "MOLECULE",
-                    "FF & MODEL",
-                ],
-                "annotations": [[df.loc[i, "annotation"], {"entities": []}]],
-            }
-            json.dump(dict_annotations, json_file)
+            f.write(df.loc[i, "description_dataset"])
+        if not os.path.exists(path_file + ".json"):
+            with open(
+                path_file + ".json",
+                "w",
+            ) as json_file:
+                dict_annotations = {
+                    "classes": [
+                        "TEMPERATURE",
+                        "SOFTWARE",
+                        "SIMULATION TIME",
+                        "MOLECULE",
+                        "FF & MODEL",
+                    ],
+                    "annotations": [
+                        [df.loc[i, "description_dataset"], {"entities": []}]
+                    ],
+                }
+                json.dump(dict_annotations, json_file)
 
 
 def generate_annotation(threshold: int, cutoff: float):
@@ -233,20 +248,19 @@ def generate_annotation(threshold: int, cutoff: float):
         The threshold for the corpus sililarity.
     """
     gro_data = load_data()
-    # Remove the duplicate description
-    gro_data = gro_data.drop_duplicates("description")
+    id_selected = gro_data["dataset_id"].tolist()
     # Prerequise for the annotation
-    df_length = description_length(gro_data, threshold)
-    df_similarity = corpus_similarity(df_length, cutoff)
-    df_composition = homogeneous_composition(df_similarity)
-    # Setup and cleaning up the annotation
-    df = df_composition[["dataset_id", "dataset_origin"]]
-    df = df.copy()
-    df["annotation"] = df_composition["title"] + "\n" + df_composition["description"]
-    # Clear the annotation
-    df["annotation"] = df["annotation"].apply(clear_annotation)
+    id_selected = description_length(id_selected, gro_data, threshold)
+    id_selected = corpus_similarity(id_selected, gro_data, cutoff)
+    id_selected = homogeneous_composition(id_selected, gro_data)
+    # Setups the data
+    data = gro_data[gro_data["dataset_id"].isin(id_selected)].copy()
+    data.drop_duplicates("dataset_id", inplace=True)
+    data = data.reset_index(drop=True)
+    # Cleaning up the annotation
+    data["description_dataset"] = data["description_dataset"].apply(clear_annotation)
     # Write the annotations in files
-    create_annotation(df)
+    create_annotation(data)
     print(f"[{datetime.now()}] [INFO] Generation completed")
 
 
