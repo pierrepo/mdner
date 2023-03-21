@@ -12,21 +12,22 @@ from datetime import datetime
 import unicodedata
 import re
 
+
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as learning sets."
 )
 parser.add_argument("-c", "--clear", help="Clear the annotation.", action="store_true")
 parser.add_argument(
     "threshold",
-    help="The threshold for the description length.",
+    help="The threshold for the length of the descriptive texts.",
     nargs="?",
     default=594,
 )
 parser.add_argument(
     "cutoff",
-    help="Select the description where the cosine similarity is below the threshold.",
+    help="Select the descriptive texts where the cosine similarity is below the threshold.",
     nargs="?",
-    default=0.8,
+    default=0.2,
 )
 args = parser.parse_args()
 
@@ -39,33 +40,24 @@ def load_data():
     dict
         returns a tuple containing the pd.DataFrame objects of our datasets.
     """
-    datasets = pd.read_parquet(
+    df = pd.read_parquet(
         "https://sandbox.zenodo.org/record/1169962/files/datasets.parquet"
     )
-    gro = pd.read_parquet(
-        "https://sandbox.zenodo.org/record/1169962/files/gromacs_gro_files.parquet"
-    )
-    gro_data = pd.merge(
-        gro,
-        datasets,
-        how="left",
-        on=["dataset_id", "dataset_origin"],
-        validate="many_to_one",
-    )
-    gro_data["description_dataset"] = gro_data["title"] + " " + gro_data["description"]
-    return gro_data
+    df["text_dataset"] = df["title"] + "\n" + df["description"]
+    df.loc[:, "text_length"] = df["description"].str.len() + df["title"].str.len() + 1
+    return df
 
 
-def description_length(id_selected: list, df: pd.DataFrame, threshold: float):
+def text_length(id_selected: list, df: pd.DataFrame, threshold: float):
     """
-    Select datasets that have a description length greater than the threshold.
+    Select datasets where the length of the text is greater than the threshold.
 
     Parameters
     ----------
     df: pandas.DataFrame
         A datasets.
     threshold: int
-        The threshold for the description length.
+        The threshold for the length of the descriptive texts.
 
     Returns
     -------
@@ -73,51 +65,14 @@ def description_length(id_selected: list, df: pd.DataFrame, threshold: float):
         The selected datasets.
     """
     data = df[df["dataset_id"].isin(id_selected)].copy()
-    # print(len(data))
-    data = data.drop_duplicates("dataset_id")
-    # print(len(data))
-    data.loc[:, "description_length"] = (
-        data["description"].str.len() + data["title"].str.len()
-    )
-    if data["description_length"].isnull().values.any():
-        data = data.dropna(subset=["description_dataset", "description_length"])
-    data = data[data["description_length"] > threshold]
+    if data["text_length"].isnull().values.any():
+        data = data.dropna(subset=["text_dataset", "text_length"])
+    data = data[data["text_length"] > threshold]
     selected = data["dataset_id"].tolist()
     print(
         f"[{datetime.now()}] [INFO]",
         len(selected),
-        "descriptions selected according the threshold length",
-    )
-    return selected
-
-
-def homogeneous_composition(id_selected, df: pd.DataFrame):
-    """
-    Select data with protein and lipid homogeneity.
-
-    Parameters
-    ----------
-    df: pandas.DataFrame
-        A datasets.
-
-    Returns
-    -------
-    pandas.DataFrame
-        The selected datasets.
-    """
-    data = df[df["dataset_id"].isin(id_selected)].copy()
-    data = data.groupby("dataset_id").agg(
-        has_lipid=("has_lipid", "any"),
-        has_protein=("has_protein", "any"),
-    )
-    size_sample = min(data.sum())
-    lipid_data = data["has_lipid"].sample(n=size_sample)
-    protein_data = data["has_protein"].sample(n=size_sample)
-    selected = set(list(protein_data.index) + list(lipid_data.index))
-    print(
-        f"[{datetime.now()}] [INFO] ",
-        len(selected),
-        " descriptions selected according the composition",
+        "texts selected according the threshold length",
     )
     return selected
 
@@ -139,13 +94,12 @@ def corpus_similarity(id_selected: list, df: pd.DataFrame, cutoff: float):
         The selected datasets.
     """
     data = df[df["dataset_id"].isin(id_selected)].copy()
-    data = data.drop_duplicates("dataset_id")
-    vectorizer = TfidfVectorizer()
-    trsfm = vectorizer.fit_transform(data["description_dataset"])
+    vectorizer = TfidfVectorizer(stop_words="english")
+    trsfm = vectorizer.fit_transform(data["text_dataset"])
     cos_data = pd.DataFrame(
         [
             cosine_similarity(trsfm[i : i + 1], trsfm)[0]
-            for i in range(len(data["description_dataset"]))
+            for i in range(len(data["text_dataset"]))
         ]
     )
     cos_data.index = data.index
@@ -160,7 +114,7 @@ def corpus_similarity(id_selected: list, df: pd.DataFrame, cutoff: float):
     print(
         f"[{datetime.now()}] [INFO] ",
         len(selected),
-        " descriptions selected according the corpus similarity",
+        "texts selected according the corpus similarity",
     )
     return selected
 
@@ -215,7 +169,7 @@ def create_annotation(df: pd.DataFrame):
             path_file + ".txt",
             "w",
         ) as f:
-            f.write(df.loc[i, "description_dataset"])
+            f.write(df.loc[i, "text_dataset"])
         if not os.path.exists(path_file + ".json"):
             with open(
                 path_file + ".json",
@@ -229,9 +183,7 @@ def create_annotation(df: pd.DataFrame):
                         "MOLECULE",
                         "FF & MODEL",
                     ],
-                    "annotations": [
-                        [df.loc[i, "description_dataset"], {"entities": []}]
-                    ],
+                    "annotations": [[df.loc[i, "text_dataset"], {"entities": []}]],
                 }
                 json.dump(dict_annotations, json_file)
 
@@ -247,18 +199,16 @@ def generate_annotation(threshold: int, cutoff: float):
     cutoff: float
         The threshold for the corpus sililarity.
     """
-    gro_data = load_data()
-    id_selected = gro_data["dataset_id"].tolist()
+    df = load_data()
+    id_selected = df["dataset_id"].tolist()
     # Prerequise for the annotation
-    id_selected = description_length(id_selected, gro_data, threshold)
-    id_selected = corpus_similarity(id_selected, gro_data, cutoff)
-    id_selected = homogeneous_composition(id_selected, gro_data)
+    id_selected = text_length(id_selected, df, threshold)
+    id_selected = corpus_similarity(id_selected, df, cutoff)
     # Setups the data
-    data = gro_data[gro_data["dataset_id"].isin(id_selected)].copy()
-    data.drop_duplicates("dataset_id", inplace=True)
+    data = df[df["dataset_id"].isin(id_selected)].copy()
     data = data.reset_index(drop=True)
     # Cleaning up the annotation
-    data["description_dataset"] = data["description_dataset"].apply(clear_annotation)
+    data["text_dataset"] = data["text_dataset"].apply(clear_annotation)
     # Write the annotations in files
     create_annotation(data)
     print(f"[{datetime.now()}] [INFO] Generation completed")
