@@ -50,11 +50,11 @@ def display_ner(
     size_entity = len(data_json["annotations"][0][1]["entities"])
     # Colors for the entities
     colors = {
-        "TEMPERATURE": "#FF0000",
-        "SOFTWARE": "#FFA500",
-        "SIMULATION TIME": "#FD6C9E",
-        "FF & MODEL": "#00FFFF",
-        "MOLECULE": "#FFFF00",
+        "TEMP": "#FF0000",
+        "SOFT": "#FFA500",
+        "STIME": "#FD6C9E",
+        "FFM": "#00FFFF",
+        "MOL": "#FFFF00",
     }
     if size_entity > 1:
         entity = data_json["annotations"][0][1]["entities"][
@@ -74,11 +74,11 @@ def display_ner(
         ] = "SELECTED"
     options = {
         "ents": [
-            "TEMPERATURE",
-            "SOFTWARE",
-            "SIMULATION TIME",
-            "FF & MODEL",
-            "MOLECULE",
+            "TEMP",
+            "SOFT",
+            "STIME",
+            "FFM",
+            "MOL",
             "SELECTED",
         ],
         "colors": colors,
