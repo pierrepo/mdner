@@ -12,7 +12,6 @@ from datetime import datetime
 import unicodedata
 import re
 
-
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as learning sets."
 )
@@ -112,7 +111,7 @@ def corpus_similarity(id_selected: list, df: pd.DataFrame, cutoff: float):
         data = df
     selected = data["dataset_id"]
     print(
-        f"[{datetime.now()}] [INFO] ",
+        f"[{datetime.now()}] [INFO]",
         len(selected),
         "texts selected according the corpus similarity",
     )
@@ -139,6 +138,7 @@ def clear_annotation(annotation: str):
     annotation = re.sub(r"([^ ])(\()", r"\1 \2", annotation)
     # Remove special characters and uniform the form of writing (unicode normalization)
     annotation = unicodedata.normalize("NFKD", annotation)
+    annotation = re.sub(r"[^\x00-\x7f]", r" ", annotation)
     # Replace multiple special characters by a space
     annotation = re.sub(r"[– ]+", " ", annotation)
     annotation = re.sub("=+", " ", annotation)
@@ -162,7 +162,6 @@ def create_annotation(df: pd.DataFrame):
         The selected datasets.
     """
     path = "../annotations/"
-    print(f"[{datetime.now()}] [INFO] Writing annotations in files ...")
     for i in range(len(df)):
         path_file = path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"]
         with open(
@@ -177,11 +176,11 @@ def create_annotation(df: pd.DataFrame):
             ) as json_file:
                 dict_annotations = {
                     "classes": [
-                        "TEMPERATURE",
-                        "SOFTWARE",
-                        "SIMULATION TIME",
-                        "MOLECULE",
-                        "FF & MODEL",
+                        "TEMP",
+                        "SOFT",
+                        "STIME",
+                        "MOL",
+                        "FFM",
                     ],
                     "annotations": [[df.loc[i, "text_dataset"], {"entities": []}]],
                 }
@@ -217,9 +216,10 @@ def generate_annotation(threshold: int, cutoff: float):
 def clear_folder():
     """Remove all files in the folder."""
     path = "../annotations/"
-    files = glob.glob(path + "*.txt")
-    for f in files:
-        os.remove(f)
+    for txt_file in glob.glob(path + "*.txt"):
+        os.remove(txt_file)
+    for json_file in glob.glob(path + "*.json"):
+        os.remove(json_file)
     print(f"[{datetime.now()}] [INFO] Folder cleared")
 
 
