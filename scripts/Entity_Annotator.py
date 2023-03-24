@@ -155,7 +155,6 @@ def found_entity(to_found: str, text: str, entities: list) -> tuple or None:
                 found.end(),
             ]
             in [[elm[0], elm[1]] for elm in entities]
-            # and to_found in filter_word
         ):
             # Add the entity to the json file
             return found.start(), found.end()
