@@ -147,7 +147,7 @@ def found_entity(to_found: str, text: str, entities: list) -> tuple or None:
         The start and end positions of the entity.
     """
     # Find the entity in the text
-    for found in re.finditer(rf"\b{to_found}\b", text):
+    for found in re.finditer(rf"\b{to_found.lower()}\b", text.lower()):
         # If the entity is found
         if (
             not [
