@@ -113,7 +113,8 @@ def display_ner(
     data.set_index("Span", inplace=True)
     with st.sidebar.expander("Entities"):
         st.table(data)
-    doc.ents = spans
+    # st.sidebar.write(doc.ents)
+    # doc.ents = spans
     example = Example.from_dict(doc, {"entities": review_annotation})
     ent_html = spacy.displacy.render(
         example.reference, style="ent", jupyter=False, options=options
@@ -147,17 +148,21 @@ def found_entity(to_found: str, text: str, entities: list) -> tuple or None:
         The start and end positions of the entity.
     """
     # Find the entity in the text
-    for found in re.finditer(rf"\b{to_found.lower()}\b", text.lower()):
-        # If the entity is found
-        if (
-            not [
-                found.start(),
-                found.end(),
-            ]
-            in [[elm[0], elm[1]] for elm in entities]
-        ):
-            # Add the entity to the json file
-            return found.start(), found.end()
+    exist = False
+    to_found = to_found.lower()
+    text = text.lower()
+    for i in range(len(text)):
+        if text.startswith(to_found, i):
+            start = i
+            end = i + len(to_found)
+            for ent in entities:
+                if (ent[0] == start or ent[1] == end) or (
+                    start > ent[0] and end < ent[1]
+                ):
+                    exist = True
+            if not exist:
+                return start, end
+            exist = False
     return None
 
 
