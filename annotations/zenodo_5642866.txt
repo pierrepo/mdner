@@ -1,0 +1,2 @@
+6MSM CFTR MD EQUILIBRATED MISSING R DOMAIN FRAGMENT MODELLED
+A protein structure based on PDB ID 6MSM with the unidentified fragment filled in based on results from molecular dynamics investigations and comparisons with alphafold. In addition to the molecular dynamics workflow used to simulate it.
