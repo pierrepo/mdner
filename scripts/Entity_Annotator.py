@@ -29,6 +29,26 @@ def display_have_text(name_file: str, col_msg: st.columns) -> None:
             )
 
 
+def display_infos_entities(data):
+    with st.sidebar.expander("Entities"):
+        st.table(data)
+    path = "../annotations/"
+    name_entities = ["MOL", "STIME", "FFM", "SOFT", "TEMP"]
+    perc_dict = dict.fromkeys(name_entities, 0)
+    total = 0
+    with st.sidebar.expander("Percentage entities :") :
+        for json_name in glob.glob(path + "*.json"):
+            with open(path + json_name, "r") as json_file:
+                annotation = json.load(json_file)["annotations"][0][1]
+                for _, _, label in annotation["entities"] :
+                    perc_dict[label] += 1
+                    total += 1
+        for label in perc_dict :
+            perc_dict[label] = float(perc_dict[label]/total) * 100
+        perc_entities = pd.DataFrame.from_dict(perc_dict, orient='index', columns=["Percentage"])
+        st.table(perc_entities)
+
+
 def display_ner(
     name_file: str, data_json: dict, path_name: str, col_msg: st.columns
 ) -> None:
@@ -111,10 +131,8 @@ def display_ner(
             review_annotation.append([start, end, label])
             spans.append(span)
     data.set_index("Span", inplace=True)
-    with st.sidebar.expander("Entities"):
-        st.table(data)
-    # st.sidebar.write(doc.ents)
-    # doc.ents = spans
+    display_infos_entities(data)
+    doc.ents = spans
     example = Example.from_dict(doc, {"entities": review_annotation})
     ent_html = spacy.displacy.render(
         example.reference, style="ent", jupyter=False, options=options
