@@ -36,16 +36,18 @@ def display_infos_entities(data):
     name_entities = ["MOL", "STIME", "FFM", "SOFT", "TEMP"]
     perc_dict = dict.fromkeys(name_entities, 0)
     total = 0
-    with st.sidebar.expander("Percentage entities :") :
+    with st.sidebar.expander("Percentage entities :"):
         for json_name in glob.glob(path + "*.json"):
             with open(path + json_name, "r") as json_file:
                 annotation = json.load(json_file)["annotations"][0][1]
-                for _, _, label in annotation["entities"] :
+                for _, _, label in annotation["entities"]:
                     perc_dict[label] += 1
                     total += 1
-        for label in perc_dict :
-            perc_dict[label] = float(perc_dict[label]/total) * 100
-        perc_entities = pd.DataFrame.from_dict(perc_dict, orient='index', columns=["Percentage"])
+        for label in perc_dict:
+            perc_dict[label] = float(perc_dict[label] / total) * 100
+        perc_entities = pd.DataFrame.from_dict(
+            perc_dict, orient="index", columns=["Percentage"]
+        )
         st.table(perc_entities)
 
 
@@ -103,14 +105,14 @@ def display_ner(
         ],
         "colors": colors,
     }
-    # Display the entities
+    # Create a blank spaCy model
     nlp = spacy.blank("en")
     text, annotations = data_json["annotations"][0]
     doc = nlp.make_doc(text)
     review_annotation = []
     spans = []
+    to_remove = []
     data = pd.DataFrame(columns=["Start", "End", "Label", "Span"])
-    flag_display = False
     for start, end, label in annotations["entities"]:
         span = doc.char_span(start, end, label=label, alignment_mode="strict")
         data = pd.concat(
@@ -121,12 +123,12 @@ def display_ner(
             axis=0,
         )
         if span is None:
-            flag_display = True
             with col_msg:
                 st.error(
                     f'Skipping entity: The word "{text[start:end]}" ({start}, {end}) can\'t be aligned',
                     icon="🚨",
                 )
+                to_remove.append([start, end, label])
         else:
             review_annotation.append([start, end, label])
             spans.append(span)
@@ -134,17 +136,21 @@ def display_ner(
     display_infos_entities(data)
     doc.ents = spans
     example = Example.from_dict(doc, {"entities": review_annotation})
+    # Display the entities in the text in html
     ent_html = spacy.displacy.render(
         example.reference, style="ent", jupyter=False, options=options
     )
     st.markdown(ent_html, unsafe_allow_html=True)
     st.write("\n")
-    if flag_display:
-        display_remove_json(path_name, col_msg)
+    # Display button to remove the json file
+    display_remove_json(path_name, col_msg)
     if size_entity > 1:
         data_json["annotations"][0][1]["entities"][st.session_state["selected"] - 1][
             2
         ] = entity
+    # Remove the entities that can't be aligned
+    for start, end, label in to_remove:
+        annotations["entities"].remove([start, end, label])
 
 
 def found_entity(to_found: str, text: str, entities: list) -> tuple or None:
@@ -173,13 +179,19 @@ def found_entity(to_found: str, text: str, entities: list) -> tuple or None:
         if text.startswith(to_found, i):
             start = i
             end = i + len(to_found)
-            for ent in entities:
-                if (ent[0] == start or ent[1] == end) or (
-                    start > ent[0] and end < ent[1]
-                ):
-                    exist = True
-            if not exist:
-                return start, end
+            # Check if the found entity can be aligned
+            nlp = spacy.blank("en")
+            doc = nlp.make_doc(text)
+            span = doc.char_span(start, end, label="TEST", alignment_mode="strict")
+            if span is not None:
+                # Check if the entity already exists
+                for ent in entities:
+                    if (ent[0] == start or ent[1] == end) or (
+                        start > ent[0] and end < ent[1]
+                    ):
+                        exist = True
+                if not exist:
+                    return start, end
             exist = False
     return None
 
