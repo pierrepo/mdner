@@ -29,14 +29,40 @@ def display_have_text(name_file: str, col_msg: st.columns) -> None:
             )
 
 
-def display_infos_entities(data):
+def display_table_entities(data_json: dict):
+    """
+    Display the position of the entities in the text with the label
+
+    Parameters
+    ----------
+    data_json: dict
+        The selected json file.
+    """
+    data = pd.DataFrame(columns=["Start", "End", "Label", "Span"])
     with st.sidebar.expander("Entities"):
+        text, annotations = data_json["annotations"][0]
+        for start, end, label in annotations["entities"]:
+            span = text[start:end]
+            data = pd.concat(
+                [
+                    data,
+                    pd.DataFrame(
+                        [[start, end, label, str(span)]], columns=data.columns
+                    ),
+                ],
+                axis=0,
+            )
+        data.set_index("Span", inplace=True)
         st.table(data)
+
+
+def display_perc_all_entities():
+    """Display the percentage of each entity in the data folder."""
     path = "../annotations/"
     name_entities = ["MOL", "STIME", "FFM", "SOFT", "TEMP"]
     perc_dict = dict.fromkeys(name_entities, 0)
     total = 0
-    with st.sidebar.expander("Percentage entities :"):
+    with st.sidebar.expander("Percentage of entities in the data folder :"):
         for json_name in glob.glob(path + "*.json"):
             with open(path + json_name, "r") as json_file:
                 annotation = json.load(json_file)["annotations"][0][1]
@@ -44,11 +70,24 @@ def display_infos_entities(data):
                     perc_dict[label] += 1
                     total += 1
         for label in perc_dict:
-            perc_dict[label] = float(perc_dict[label] / total) * 100
+            perc_dict[label] = [float(perc_dict[label] / total) * 100, perc_dict[label]]
         perc_entities = pd.DataFrame.from_dict(
-            perc_dict, orient="index", columns=["Percentage"]
+            perc_dict, orient="index", columns=["Percentage", "Total"]
         )
         st.table(perc_entities)
+
+
+def display_infos_entities(data_json: dict):
+    """
+    Display the number of entities and the percentage of each entity in the data folder.
+
+    Parameters
+    ----------
+    data_json: dict
+        The selected json file.
+    """
+    display_table_entities(data_json)
+    display_perc_all_entities()
 
 
 def display_ner(
@@ -109,48 +148,30 @@ def display_ner(
     nlp = spacy.blank("en")
     text, annotations = data_json["annotations"][0]
     doc = nlp.make_doc(text)
-    review_annotation = []
     spans = []
-    to_remove = []
-    data = pd.DataFrame(columns=["Start", "End", "Label", "Span"])
     for start, end, label in annotations["entities"]:
         span = doc.char_span(start, end, label=label, alignment_mode="strict")
-        data = pd.concat(
-            [
-                data,
-                pd.DataFrame([[start, end, label, str(span)]], columns=data.columns),
-            ],
-            axis=0,
-        )
         if span is None:
             with col_msg:
                 st.error(
                     f'Skipping entity: The word "{text[start:end]}" ({start}, {end}) can\'t be aligned',
                     icon="🚨",
                 )
-                to_remove.append([start, end, label])
+                annotations["entities"].remove([start, end, label])
         else:
-            review_annotation.append([start, end, label])
             spans.append(span)
-    data.set_index("Span", inplace=True)
-    display_infos_entities(data)
     doc.ents = spans
-    example = Example.from_dict(doc, {"entities": review_annotation})
+    example = Example.from_dict(doc, annotations)
     # Display the entities in the text in html
     ent_html = spacy.displacy.render(
         example.reference, style="ent", jupyter=False, options=options
     )
     st.markdown(ent_html, unsafe_allow_html=True)
     st.write("\n")
-    # Display button to remove the json file
-    display_remove_json(path_name, col_msg)
     if size_entity > 1:
         data_json["annotations"][0][1]["entities"][st.session_state["selected"] - 1][
             2
         ] = entity
-    # Remove the entities that can't be aligned
-    for start, end, label in to_remove:
-        annotations["entities"].remove([start, end, label])
 
 
 def found_entity(to_found: str, text: str, entities: list) -> tuple or None:
@@ -524,8 +545,12 @@ def user_interaction() -> None:
         display_have_text(name_file, col_msg)
         # Display editor tools and get the selected entity
         display_editor(data_json, col_msg)
+        # Display information about the selected entity and percentage of entities
+        display_infos_entities(data_json)
         # Display spacy visualizer
         display_ner(name_file, data_json, path_name, col_msg)
+        # Display button to remove the json file
+        display_remove_json(path_name, col_msg)
         # Save the json file automatically
         save_json(path_name, data_json)
     else:
