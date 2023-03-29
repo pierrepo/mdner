@@ -4,7 +4,6 @@ import streamlit as st
 import json
 import spacy
 from spacy.training import Example
-import re
 import glob
 import os
 import pandas as pd
