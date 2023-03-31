@@ -480,24 +480,6 @@ def save_json(path_name: str, data_json: dict) -> None:
         f.truncate()
 
 
-def display_remove_json(path_name: str, col_msg: st.columns) -> None:
-    """
-    Remove the json file.
-
-    Parameters
-    ----------
-    path_name: str
-        The path of the json file to correct.
-    col_msg: st.columns
-        The column where the message will be displayed.
-    """
-    remove = st.button("Remove json file")
-    if remove:
-        os.remove(path_name)
-        with col_msg:
-            st.success("JSON file removed !", icon="✅")
-
-
 def load_css() -> None:
     """Load a css style."""
     st.markdown(
@@ -548,8 +530,6 @@ def user_interaction() -> None:
         display_infos_entities(data_json)
         # Display spacy visualizer
         display_ner(name_file, data_json, path_name, col_msg)
-        # Display button to remove the json file
-        display_remove_json(path_name, col_msg)
         # Save the json file automatically
         save_json(path_name, data_json)
     else:
