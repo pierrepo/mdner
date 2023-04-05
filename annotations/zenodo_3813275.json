@@ -1,1 +1,1 @@
-{"classes": ["TEMP", "SOFT", "STIME", "MOL", "FFM"], "annotations": [["Atomistic simulations of a POPC / POPC+cholesterol membrane with different simulation parameters\nAtomistic", {"entities": [[25, 45, "MOL"], [233, 253, "MOL"], [631, 638, "SOFT"], [741, 748, "MOL"], [871, 879, "FFM"]]}]]}
+{"classes": ["TEMP", "SOFT", "STIME", "MOL", "FFM"], "annotations": [["Atomistic simulations of a POPC / POPC+cholesterol membrane with different simulation parameters\nAtomistic", {"entities": [[233, 253, "MOL"], [741, 748, "MOL"]]}]]}
