@@ -82,9 +82,11 @@ streamlit run scripts/Entity_Annotator.py
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
 
 ## Create a MDNER
+
 To create the `mdner`, the `-c` and `-t` options must be used. The `-c` option tells the script to create a model. The `-t` option is the hyperparameters to be used to train the model.
 
 ### Parameters
+
 ```
 usage: mdner.py [-h] [-p | -c] [-t d f p r] [-g]
 
@@ -97,7 +99,7 @@ options:
   -c, --create          Create a dedicated Named Entity Recognition model for
                         our molecular dynamics data.
   -t d f p r, --train d f p r
-                        Hyperparameters for the learning process where d is
+                        Hyperparameters for the training process where d is
                         the percentage of dropout. The f, p and r scores
                         define what SpaCy believes to be the best model after
                         the training process.
@@ -110,6 +112,7 @@ options:
 ```
 python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1
 ```
+
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be hidden). The three other values correspond to the metrics. They allow us to consider what is the best model. Here, for example, we prefer the precision score rather than the recall score.
 
 ## Evaluate the MDNER
@@ -119,4 +122,5 @@ Evaluate the `mdner` :
 ```
 python3 scripts/mdner.py -p
 ```
+
 After creating the model, a html file will be create in the `results/outputs/` folder.
