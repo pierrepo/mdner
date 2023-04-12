@@ -37,9 +37,10 @@ group.add_argument(
 parser.add_argument(
     "-t",
     "--train",
-    help="Hyperparameters for the training process.",
+    help="Hyperparameters for the training process where d is the percentage of dropout. The f, p and r scores define what SpaCy believes to be the best model after the training process.",
     nargs=4,
     type=float,
+    metavar=("d", "f", "p", "r"),
 )
 parser.add_argument("-g", "--gpu", help="Use GPU for training.", action="store_true")
 args = parser.parse_args()
