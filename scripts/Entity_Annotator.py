@@ -9,7 +9,7 @@ import os
 import pandas as pd
 
 
-def display_have_text(name_file: str, col_msg: st.columns) -> None:
+def display_have_text(name_file: str, col_msg: st.columns, data_json: dict) -> None:
     """
     Display an error message if the text file does not exist.
 
@@ -19,6 +19,8 @@ def display_have_text(name_file: str, col_msg: st.columns) -> None:
         The name of the json file.
     col_msg: st.columns
         The column where the message will be displayed.
+    data_json: dict
+        The selected json file.
     """
     with col_msg:
         if not os.path.exists(f"../annotations/{name_file.split('.')[0]}.txt"):
@@ -26,6 +28,8 @@ def display_have_text(name_file: str, col_msg: st.columns) -> None:
                 f"The text corresponding to the JSON file {name_file} does not exist !",
                 icon="🚨",
             )
+            with open(f"../annotations/{name_file.split('.')[0]}.txt", "w") as f:
+                f.write(data_json["annotations"][0][0])
 
 
 def display_table_entities(data_json: dict):
@@ -523,7 +527,7 @@ def user_interaction() -> None:
         with open(path_name, "r", encoding="utf-8") as f:
             data_json = json.load(f)
         # Display if the json has dedicated text file
-        display_have_text(name_file, col_msg)
+        display_have_text(name_file, col_msg, data_json)
         # Display editor tools and get the selected entity
         display_editor(data_json, col_msg)
         # Display information about the selected entity and percentage of entities
