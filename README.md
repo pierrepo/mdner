@@ -7,6 +7,11 @@ A Named Entity Recognition model for molecular dynamics data.
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
 ![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)
 
+## Prerequisites
+
+### Hardware
+For the GPU code, it is essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code.
+
 ## Setup your environment
 
 Clone the repository:
