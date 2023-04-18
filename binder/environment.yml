@@ -28,3 +28,6 @@ dependencies:
       - seaborn
       - scikit-learn
       - streamlit
+      - GPUtil
+      - numba
+      - spacy[cuda-autodetect]
