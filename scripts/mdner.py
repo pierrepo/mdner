@@ -1,3 +1,8 @@
+"""This script is used to create a model for the molecular dynamics data by using the SpaCy library.
+
+To understand how the model works, please read the documentation of SpaCy in the following link: https://spacy.io/usage/training
+"""
+
 import argparse
 import os
 import glob
@@ -16,7 +21,11 @@ import torch
 from GPUtil import showUtilization as gpu_usage
 from numba import cuda
 
-random.seed(42)
+# 493
+# 1645
+# 7522
+# 112
+random.seed(112)
 
 parser = argparse.ArgumentParser(
     description="Create or call a model for the molecular dynamics data."
@@ -60,21 +69,21 @@ args = parser.parse_args()
 #     gpu_usage()
 
 
-# def count_entities(data: dict):
-#     count = {"TEMP": 0, "SOFT": 0, "STIME": 0, "MOL": 0, "FFM": 0}
-#     for annotation in data["annotations"]:
-#         for entity in annotation[1]["entities"]:
-#             count[entity[2]] += 1
-#     return count
-
-
 def create_data():
+    """
+    Create training, test and evaluation data from the annotations.
+    
+    Returns:
+    --------
+    data: list
+        List of dictionaries with the training, test and evaluation data.
+    """
     # Setup our training data and test data
     path = "../annotations/"
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
-    size_train = int(len(json_files) * 0.6)
-    size_test = int(len(json_files) * 0.3)
-    size_eval = int(len(json_files) * 0.1)
+    size_train = int(len(json_files) * 0.8)
+    size_test = int(len(json_files) * 0.15)
+    size_eval = int(len(json_files) * 0.05)
     data = [{"classes": [], "annotations": []} for i in range(3)]
     sample_train = random.sample(json_files, size_train)
     sample_test = random.sample(
@@ -107,6 +116,16 @@ def create_data():
 
 
 def create_spacy_object(data, name_file):
+    """
+    Create a spacy object from the data with the name of the file.
+    
+    Parameters:
+    ----------
+    data: list
+        Dictionary of the data (training, test or evaluation).
+    name_file: str
+        Name of the json file to save the data.
+    """
     with open("../results/outputs/" + name_file + ".json", "w") as f:
         json.dump(data, f, indent=None)
     nlp = spacy.blank("en")  # Load a new spacy model
@@ -134,6 +153,20 @@ def create_spacy_object(data, name_file):
 
 
 def setup_config(d, f, p, r):
+    """
+    Change parameters in the config file for the training process.
+    
+    Parameters:
+    ----------
+    d: float
+        Percentage of dropout.
+    f: float
+        The f score of the best model you want to achieve.
+    p: float
+        The p score of the best model you want to achieve.
+    r: float
+        The r score of the best model you want to achieve.
+    """
     old_params = [
         "train = null",
         "dev = null",
@@ -141,9 +174,10 @@ def setup_config(d, f, p, r):
         "ents_f = 1.0",
         "ents_p = 0.0",
         "ents_r = 0.0",
-        # "eval_frequency = 200",
+        "eval_frequency = 200",
         'vectors = "en_core_web_lg"',
-        # "batch_size = 1000",
+        "batch_size = 1000",
+        "init_tok2vec = null",
     ]
     new_params = [
         "train = ../results/outputs/train_data.spacy",
@@ -152,9 +186,10 @@ def setup_config(d, f, p, r):
         f"ents_f = {f}",
         f"ents_p = {p}",
         f"ents_r = {r}",
-        # "eval_frequency = 100",
+        "eval_frequency = 200",
         "vectors = null",
-        # "batch_size = 50",
+        "batch_size = 32",
+        'init_tok2vec = "en_core_sci_lg"',
     ]
     with open("../results/outputs/config.cfg", "r+") as f:
         file_contents = f.read()
@@ -167,6 +202,7 @@ def setup_config(d, f, p, r):
 
 
 def entities_to_csv():
+    """Create a csv file with the number of entities per file."""
     path = "../annotations/"
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
     to_pandas = []
@@ -224,19 +260,20 @@ if __name__ == "__main__":
         # Train the model and evaluate it depending on the GPU availability
         if args.gpu:
             os.system(
-                f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} --gpu-id 0 > ../results/outputs/train_{d}_{f}_{p}_{r}.log"
+                f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} --gpu-id 0 | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
             )
             os.system(
                 f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy --gpu-id 0"
             )
         else:
             os.system(
-                f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r}/ > ../results/outputs/train_{d}_{f}_{p}_{r}.log"
+                f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r}/ | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
             )
             os.system(
                 f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy"
             )
     elif args.predict:
+        # Load the model and predict the entities by saving the results in an html file
         nlp_ner = spacy.load("../results/models/model-best")
         nlp_annotated = spacy.blank("en")
         if os.path.isfile("../results/outputs/eval_data.json"):
