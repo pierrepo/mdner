@@ -4,14 +4,15 @@ To understand how the model works, please read the documentation of SpaCy in the
 """
 
 import argparse
+import subprocess
 import os
+import logging
 import glob
 import json
 from tqdm import tqdm
 import spacy
 from spacy.tokens import DocBin
 from spacy.training import Example
-from spacy.cli.train import train
 from spacy import displacy
 import random
 import re
@@ -72,7 +73,7 @@ args = parser.parse_args()
 def create_data():
     """
     Create training, test and evaluation data from the annotations.
-    
+
     Returns:
     --------
     data: list
@@ -109,16 +110,15 @@ def create_data():
                         data[i]["annotations"].append(data_json["annotations"][0])
                     else:
                         ignored += 1
-    print(
-        f"[{datetime.now()}] [WARNING] {ignored} files ignored because there are not many entities"
-    )
+    if ignored != 0:
+        logging.warning(f"{ignored} files ignored because there are not many entities")
     return data
 
 
 def create_spacy_object(data, name_file):
     """
     Create a spacy object from the data with the name of the file.
-    
+
     Parameters:
     ----------
     data: list
@@ -130,9 +130,7 @@ def create_spacy_object(data, name_file):
         json.dump(data, f, indent=None)
     nlp = spacy.blank("en")  # Load a new spacy model
     db = DocBin()  # Create a DocBin object
-    description = (
-        f"[{datetime.now()}] [INFO] Creating {name_file.split('_')[0]} data object"
-    )
+    description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] Creating {name_file.split('_')[0]} data object"
     annotations = tqdm(
         data["annotations"],
         desc=description,
@@ -144,7 +142,7 @@ def create_spacy_object(data, name_file):
         ents = []
         for start, end, label in annot["entities"]:  # Add character indexes
             span = doc.char_span(start, end, label=label, alignment_mode="contract")
-            if not span is None:
+            if span is not None:
                 ents.append(span)
         doc.ents = ents  # Label the text with the ents
         db.add(doc)
@@ -155,7 +153,7 @@ def create_spacy_object(data, name_file):
 def setup_config(d, f, p, r):
     """
     Change parameters in the config file for the training process.
-    
+
     Parameters:
     ----------
     d: float
@@ -220,61 +218,85 @@ def entities_to_csv():
     df.to_csv("../results/outputs/entities_train.csv", index=False)
 
 
+def display_command(command, display=True):
+    logging.info(f"Running command: {command}")
+    subprocess.run(
+        command,
+        shell=True,
+        stdout=subprocess.DEVNULL if not display else None,
+    )
+
+
+def check_debug(text):
+    ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
+    pos = text.find("Summary")
+    text = ansi_escape.sub("", text[pos:])
+    checked = re.findall(r"\d+", text)
+    str_checked = ["checks passed", "warnings", "failed"]
+    to_print = ""
+    for i in range(len(checked)):
+        to_print += f"{checked[i]} {str_checked[i]}"
+        if i != len(checked) - 1:
+            to_print += ", "
+    logging.info(to_print)
+
+
 if __name__ == "__main__":
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
+    logging.basicConfig(
+        format="[%(asctime)s] [%(levelname)s] %(message)s",
+        level=logging.NOTSET,
+    )
     if args.create and args.train:
-        d = args.train[0]
-        f = args.train[1]
-        p = args.train[2]
-        r = args.train[3]
+        d, f, p, r = args.train
         # Check if data is already created
         json_files = glob.glob("../results/outputs/*.json")
         if len(json_files) != 3:
+            # Create data and save it in spacy files and json files
             data = create_data()
             create_spacy_object(data[0], "train_data")
             create_spacy_object(data[1], "test_data")
             create_spacy_object(data[2], "eval_data")
         else:
-            print(f"[{datetime.now()}] [INFO] Data already created")
+            logging.info("Data already created")
         # Create config file depending on the GPU availability
         if args.gpu:
-            print(f"[{datetime.now()}] [INFO] Checking GPU availability")
+            logging.info("Checking GPU availability")
             is_using_gpu = spacy.prefer_gpu()
             if not is_using_gpu:
-                print(
-                    f"[{datetime.now()}] [ERROR] GPU is not available. Please check if you have a GPU and if you have installed the correct version of CUDA."
+                logging.error(
+                    "GPU is not available. Please check if you have a GPU and if you have installed the correct version of CUDA."
                 )
                 exit()
             else:
-                os.system(
-                    "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline transformer,ner --optimize accuracy -G --force"
+                logging.error(
+                    "GPU is not available. Please check if you have a GPU and if you have installed the correct version of CUDA."
                 )
+                command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline transformer,ner --optimize accuracy -G --force"
+                display_command(command, display=False)
         else:
-            os.system(
-                "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
-            )
+            command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
+            display_command(command, display=False)
         # Setup config file with the parameters
         setup_config(d=d, f=f, p=p, r=r)
         # Check if the config file is correct
-        os.system("python -m spacy debug data ../results/outputs/config.cfg")
+        command = "python -m spacy debug data ../results/outputs/config.cfg"
+        logging.info(f"Running command: {command}")
+        text = subprocess.run(command, shell=True, capture_output=True, text=True)
+        check_debug(text.stdout)
         # Train the model and evaluate it depending on the GPU availability
         if args.gpu:
-            os.system(
-                f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} --gpu-id 0 | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
-            )
-            os.system(
-                f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy --gpu-id 0"
-            )
+            command = f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} --gpu-id 0 | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
+            display_command(command)
+            command = f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy --gpu-id 0"
+            display_command(command)
         else:
-            os.system(
-                f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r}/ | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
-            )
-            os.system(
-                f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy"
-            )
+            command = f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
+            display_command(command)
+            command = f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy"
+            display_command(command)
     elif args.predict:
         # Load the model and predict the entities by saving the results in an html file
-        nlp_ner = spacy.load("../results/models/model-best")
+        nlp_ner = spacy.load("../results/models_0.4_0.0_0.9_0.1/model-best")
         nlp_annotated = spacy.blank("en")
         if os.path.isfile("../results/outputs/eval_data.json"):
             with open("../results/outputs/eval_data.json") as f:
@@ -310,8 +332,8 @@ if __name__ == "__main__":
                 html += displacy.render(doc_ner, style="ent", options=options)
             with open("../results/outputs/html_predict.html", "w") as f:
                 f.write(html)
-            print(f"[{datetime.now()}] [INFO] HTML file created")
+            logging.info("HTML file created")
         else:
-            print(f"[{datetime.now()}] [ERROR] Cannot find the evaluation data.")
+            logging.error("Cannot find the evaluation data.")
     else:
-        print(f"[{datetime.now()}] [ERROR] Please specify a valid argument.")
+        logging.error("Please specify a valid argument.")
