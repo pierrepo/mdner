@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 import unicodedata
 import re
+import logging
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as learning sets."
@@ -68,11 +69,7 @@ def text_length(id_selected: list, df: pd.DataFrame, threshold: float):
         data = data.dropna(subset=["text_dataset", "text_length"])
     data = data[data["text_length"] > threshold]
     selected = data["dataset_id"].tolist()
-    print(
-        f"[{datetime.now()}] [INFO]",
-        len(selected),
-        "texts selected according the threshold length",
-    )
+    logging.info(f"{len(selected)} texts selected according the threshold length")
     return selected
 
 
@@ -110,11 +107,7 @@ def corpus_similarity(id_selected: list, df: pd.DataFrame, cutoff: float):
     else:
         data = df
     selected = data["dataset_id"]
-    print(
-        f"[{datetime.now()}] [INFO]",
-        len(selected),
-        "texts selected according the corpus similarity",
-    )
+    logging.info(f"{len(selected)} texts selected according the corpus similarity")
     return selected
 
 
@@ -210,7 +203,7 @@ def generate_annotation(threshold: int, cutoff: float):
     data["text_dataset"] = data["text_dataset"].apply(clear_annotation)
     # Write the annotations in files
     create_annotation(data)
-    print(f"[{datetime.now()}] [INFO] Generation completed")
+    logging.info("Generation completed")
 
 
 def clear_folder():
@@ -220,10 +213,14 @@ def clear_folder():
         os.remove(txt_file)
     for json_file in glob.glob(path + "*.json"):
         os.remove(json_file)
-    print(f"[{datetime.now()}] [INFO] Folder cleared")
+    logging.info("Folder cleared")
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        format="[%(asctime)s] [%(levelname)s] %(message)s",
+        level=logging.NOTSET,
+    )
     os.chdir(os.path.split(os.path.abspath(__file__))[0])
     if args.clear:
         clear_folder()
