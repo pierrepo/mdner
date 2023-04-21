@@ -11,7 +11,7 @@ A Named Entity Recognition model for molecular dynamics data.
 
 ### Hardware
 
-For the GPU code, it is essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code.
+For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code.
 
 ## Setup your environment
 
