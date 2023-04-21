@@ -58,19 +58,20 @@ Generate json files for spaCy NER and text files containing titles and descripti
 Launch the generation of text files and json files :
 
 ```
-python3 scripts/generate_annotation.py
+cd scripts
+python3 generate_annotation.py
 ```
 
 ### Parameters
 
 ```
-usage: generate_annotation.py [-h] [-c] [threshold] [n]
+usage: generate_annotation.py [-h] [-c] [threshold] [cutoff]
 
-Generate text files containing the title and description of the dataset in the annotation folder.
+Generate text and json files in the annotation folder to be used as training sets.
 
 positional arguments:
   threshold    The threshold for the description length.
-  n            The number of least similar descriptions to be selected.
+  cutoff       Select the descriptive texts where the cosine similarity is below the threshold.
 
 options:
   -h, --help   show this help message and exit
@@ -80,7 +81,7 @@ options:
 Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `Entity Annotator` to annotate and edit json files by typing the following command :
 
 ```
-streamlit run scripts/Entity_Annotator.py
+streamlit run Entity_Annotator.py
 ```
 
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
