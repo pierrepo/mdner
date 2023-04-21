@@ -10,6 +10,7 @@ A Named Entity Recognition model for molecular dynamics data.
 ## Prerequisites
 
 ### Hardware
+
 For the GPU code, it is essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code.
 
 ## Setup your environment
@@ -115,7 +116,8 @@ options:
 ### Example
 
 ```
-python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1
+cd scripts
+python3 mdner.py -c -t 0.4 0.0 0.9 0.1 -g
 ```
 
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be hidden). The three other values correspond to the metrics. They allow us to consider what is the best model. Here, for example, we prefer the precision score rather than the recall score.
@@ -125,7 +127,8 @@ Here, we define a model where the dropout will be 0.4 (40% of the nodes will be 
 Evaluate the `mdner` :
 
 ```
-python3 scripts/mdner.py -p
+cd scripts
+python3 mdner.py -p
 ```
 
 After creating the model, a html file will be create in the `results/outputs/` folder.
