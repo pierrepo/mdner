@@ -42,7 +42,7 @@ conda activate mdner
 Note: you can also update the conda environment with:
 
 ```bash
-mamba env update -f env/environment.yml
+mamba env update -f binder/environment.yml
 ```
 
 To deactivate an active environment, use
