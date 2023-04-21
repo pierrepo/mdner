@@ -70,22 +70,22 @@ args = parser.parse_args()
 #     gpu_usage()
 
 
-def create_data():
+def create_data() -> list:
     """
     Create training, test and evaluation data from the annotations.
 
     Returns:
     --------
     data: list
-        List of dictionaries with the training, test and evaluation data.
+        List of dictionaries containing training, test and evaluation data.
     """
-    # Setup our training data and test data
+    # Get all json files
     path = "../annotations/"
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
+    # Split the data into training, test and evaluation data
     size_train = int(len(json_files) * 0.8)
     size_test = int(len(json_files) * 0.15)
     size_eval = int(len(json_files) * 0.05)
-    data = [{"classes": [], "annotations": []} for i in range(3)]
     sample_train = random.sample(json_files, size_train)
     sample_test = random.sample(
         [i for i in json_files if i not in sample_train], size_test
@@ -94,7 +94,9 @@ def create_data():
         [i for i in json_files if i not in sample_train + sample_test], size_eval
     )
     samples = [sample_train, sample_test, sample_eval]
+    data = [{"classes": [], "annotations": []} for i in range(3)]
     ignored = 0
+    # Read each json file and check if contains enough entities
     for i in range(len(samples)):
         for json_file in samples[i]:
             with open(path + json_file, "r") as f:
@@ -115,21 +117,24 @@ def create_data():
     return data
 
 
-def create_spacy_object(data, name_file):
+def create_spacy_object(data: dict, name_file: str):
     """
     Create a spacy object from the data with the name of the file.
 
     Parameters:
     ----------
-    data: list
+    data: dict
         Dictionary of the data (training, test or evaluation).
     name_file: str
         Name of the json file to save the data.
     """
     with open("../results/outputs/" + name_file + ".json", "w") as f:
         json.dump(data, f, indent=None)
-    nlp = spacy.blank("en")  # Load a new spacy model
-    db = DocBin()  # Create a DocBin object
+    # Load a new spacy model
+    nlp = spacy.blank("en")
+    # Create a DocBin object will be used to create a .spacy file
+    db = DocBin()
+    # Config the tqdm bar to display
     description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] Creating {name_file.split('_')[0]} data object"
     annotations = tqdm(
         data["annotations"],
@@ -137,20 +142,24 @@ def create_spacy_object(data, name_file):
         total=len(data["annotations"]),
         bar_format="{l_bar} Size: " + str(len(data["annotations"])),
     )
+    # Read each annotation and check if the entity is a valid entity
     for text, annot in annotations:
-        doc = nlp.make_doc(text)  # Create doc object from text
+        # Create doc object from text
+        doc = nlp.make_doc(text)
         ents = []
-        for start, end, label in annot["entities"]:  # Add character indexes
+        for start, end, label in annot["entities"]:
+            # Align the character spans to the tokens
             span = doc.char_span(start, end, label=label, alignment_mode="contract")
             if span is not None:
                 ents.append(span)
-        doc.ents = ents  # Label the text with the ents
+        # Label the text with the ents
+        doc.ents = ents
         db.add(doc)
-
+    # Save the DocBin object
     db.to_disk(f"../results/outputs/{name_file}.spacy")
 
 
-def setup_config(d, f, p, r):
+def setup_config(d: float, f: float, p: float, r: float):
     """
     Change parameters in the config file for the training process.
 
@@ -189,6 +198,7 @@ def setup_config(d, f, p, r):
         "batch_size = 32",
         'init_tok2vec = "en_core_sci_lg"',
     ]
+    # Change the parameters in the config file
     with open("../results/outputs/config.cfg", "r+") as f:
         file_contents = f.read()
         for i in range(len(old_params)):
@@ -201,9 +211,11 @@ def setup_config(d, f, p, r):
 
 def entities_to_csv():
     """Create a csv file with the number of entities per file."""
+    # Get the json files
     path = "../annotations/"
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
     to_pandas = []
+    # Read each json file and count the number of entities
     for json_file in json_files:
         with open(path + json_file, "r") as f:
             data_json = json.load(f)
@@ -212,13 +224,24 @@ def entities_to_csv():
                 if ent in count.keys():
                     count[ent] += 1
             to_pandas.append([json_file] + list(count.values()))
+    # Save the data in a csv file
     df = pd.DataFrame(
         to_pandas, columns=["JSON FILE", "MOL", "TEMP", "STIME", "SOFT", "FFM"]
     )
     df.to_csv("../results/outputs/entities_train.csv", index=False)
 
 
-def display_command(command, display=True):
+def display_command(command: str, display: bool = True):
+    """
+    Display the command and run it.
+
+    Parameters:
+    ----------
+    command: str
+        Command to run.
+    display: bool
+        If True, the output of the command will be displayed.
+    """
     logging.info(f"Running command: {command}")
     subprocess.run(
         command,
@@ -227,18 +250,173 @@ def display_command(command, display=True):
     )
 
 
-def check_debug(text):
+def check_debug(output_command: str) -> bool:
+    """
+    Extract the number of checks passed, warnings and failed.
+
+    Execute the command and check the output of the command to see if there
+    are any errors.
+
+    Parameters:
+    ----------
+    output_command: str
+        Output of the command.
+
+    Returns:
+    -------
+    bool
+        True if the number of failed checks is greater than 0, False otherwise.
+    """
+    # Delete of ANSI codes
     ansi_escape = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
-    pos = text.find("Summary")
-    text = ansi_escape.sub("", text[pos:])
-    checked = re.findall(r"\d+", text)
+    pos = output_command.find("Summary")
+    output_command = ansi_escape.sub("", output_command[pos:])
+    # Get the number of checks passed, warnings and failed
+    checked = re.findall(r"\d+", output_command)
     str_checked = ["checks passed", "warnings", "failed"]
-    to_print = ""
-    for i in range(len(checked)):
-        to_print += f"{checked[i]} {str_checked[i]}"
-        if i != len(checked) - 1:
-            to_print += ", "
+    # Create a string with the results to print
+    to_print = ", ".join(
+        [f"{checked[i]} {str_checked[i]}" for i in range(len(checked))]
+    )
     logging.info(to_print)
+    return checked[2] > 0 if len(checked) > 2 else False
+
+
+def generate_html():
+    """Generate the html file with the evaluation of the model."""
+    # Load the best model and an empty model
+    nlp_ner = spacy.load("../results/models_0.4_0.0_0.9_0.1/model-best")
+    nlp_annotated = spacy.blank("en")
+    # Check if evaluation data exists
+    if os.path.isfile("../results/outputs/eval_data.json"):
+        # Load the evaluation data
+        with open("../results/outputs/eval_data.json") as f:
+            eval_json = json.load(f)
+        # Define the colors for the entities
+        colors = {
+            "TEMP": "#FF0000",
+            "SOFT": "#FFA500",
+            "STIME": "#FD6C9E",
+            "FFM": "#00FFFF",
+            "MOL": "#FFFF00",
+        }
+        options = {
+            "ents": [
+                "TEMP",
+                "SOFT",
+                "STIME",
+                "FFM",
+                "MOL",
+            ],
+            "colors": colors,
+        }
+        # Generate the html file with the annotations of the model and the annotations of the annotator
+        html = ""
+        for text, annotation in eval_json["annotations"]:
+            doc_ner = nlp_ner(text + 2 * "\n")
+            example = Example.from_dict(
+                nlp_annotated.make_doc(text + 2 * "\n"), annotation
+            )
+            html += "<hr>\n<b>Texte annoté par Mohmo:</b>" + 3 * "\n"
+            html += displacy.render(example.reference, style="ent", options=options)
+            html += "<b>Texte annoté par MDNER:</b>" + 3 * "\n"
+            html += displacy.render(doc_ner, style="ent", options=options)
+        # Save the html file
+        with open("../results/outputs/html_predict.html", "w") as f:
+            f.write(html)
+        logging.info("HTML file created")
+    else:
+        logging.error("Cannot find the evaluation data.")
+
+
+def generate_data():
+    """Generate train, test and evaluation data in json files and spacy files."""
+    json_files = glob.glob("../results/outputs/*.json")
+    # Check if data is already created
+    if len(json_files) != 3:
+        # Create data and save it in spacy files and json files
+        data = create_data()
+        create_spacy_object(data[0], "train_data")
+        create_spacy_object(data[1], "test_data")
+        create_spacy_object(data[2], "eval_data")
+    else:
+        logging.info("Data already created")
+
+
+def check_gpu():
+    """
+    Check if GPU is available.
+
+    Returns:
+    -------
+    bool
+        True if GPU is available, False otherwise.
+    """
+    logging.info("Checking GPU availability")
+    is_using_gpu = spacy.prefer_gpu()
+    if not is_using_gpu:
+        logging.error(
+            "GPU is not available. Please check if you have a GPU and if you have installed the correct version of CUDA."
+        )
+        return False
+    else:
+        logging.info("GPU is available")
+        return True
+
+
+def debug_config():
+    """Run the command to debug the config file and check the output results."""
+    command = "python -m spacy debug data ../results/outputs/config.cfg"
+    logging.info(f"Running command: {command}")
+    output_command = subprocess.run(command, shell=True, capture_output=True, text=True)
+    have_error = check_debug(output_command.stdout)
+    if have_error:
+        logging.error(f"A error has been detected :\n{output_command.stdout}")
+        exit(1)
+
+
+def create_config(option_gpu: bool):
+    """
+    Create the config file depending if GPU is available or not.
+
+    Parameters:
+    ----------
+    option_gpu: bool
+        True if GPU is available, False otherwise.
+    """
+    if option_gpu:
+        have_gpu = check_gpu()
+        if have_gpu:
+            command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline transformer,ner --optimize accuracy -G --force"
+            display_command(command, display=False)
+        else:
+            exit(1)
+    else:
+        command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
+        display_command(command, display=False)
+
+
+def training_process(option_gpu: bool, d: float, f: float, p: float, r: float):
+    """
+    Execute the commands to train the model and evaluate it.
+
+    Parameters:
+    ----------
+    option_gpu: bool
+        True if GPU is available, False otherwise.
+    d: float
+        The dropout rate.
+    f: float
+        The f score of the best model you want to achieve.
+    p: float
+        The p score of the best model you want to achieve.
+    r: float
+        The r score of the best model you want to achieve.
+    """
+    command = f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} {'--gpu-id 0' if option_gpu else ''} | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
+    display_command(command)
+    command = f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy {'--gpu-id 0' if option_gpu else ''}"
+    display_command(command)
 
 
 if __name__ == "__main__":
@@ -248,92 +426,16 @@ if __name__ == "__main__":
     )
     if args.create and args.train:
         d, f, p, r = args.train
-        # Check if data is already created
-        json_files = glob.glob("../results/outputs/*.json")
-        if len(json_files) != 3:
-            # Create data and save it in spacy files and json files
-            data = create_data()
-            create_spacy_object(data[0], "train_data")
-            create_spacy_object(data[1], "test_data")
-            create_spacy_object(data[2], "eval_data")
-        else:
-            logging.info("Data already created")
+        generate_data()
         # Create config file depending on the GPU availability
-        if args.gpu:
-            logging.info("Checking GPU availability")
-            is_using_gpu = spacy.prefer_gpu()
-            if not is_using_gpu:
-                logging.error(
-                    "GPU is not available. Please check if you have a GPU and if you have installed the correct version of CUDA."
-                )
-                exit()
-            else:
-                logging.error(
-                    "GPU is not available. Please check if you have a GPU and if you have installed the correct version of CUDA."
-                )
-                command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline transformer,ner --optimize accuracy -G --force"
-                display_command(command, display=False)
-        else:
-            command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
-            display_command(command, display=False)
-        # Setup config file with the parameters
+        create_config(args.gpu)
+        # Change parameters in the config file depending on the arguments
         setup_config(d=d, f=f, p=p, r=r)
         # Check if the config file is correct
-        command = "python -m spacy debug data ../results/outputs/config.cfg"
-        logging.info(f"Running command: {command}")
-        text = subprocess.run(command, shell=True, capture_output=True, text=True)
-        check_debug(text.stdout)
+        debug_config()
         # Train the model and evaluate it depending on the GPU availability
-        if args.gpu:
-            command = f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} --gpu-id 0 | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
-            display_command(command)
-            command = f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy --gpu-id 0"
-            display_command(command)
-        else:
-            command = f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
-            display_command(command)
-            command = f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy"
-            display_command(command)
+        training_process(args.gpu, d, f, p, r)
     elif args.predict:
-        # Load the model and predict the entities by saving the results in an html file
-        nlp_ner = spacy.load("../results/models_0.4_0.0_0.9_0.1/model-best")
-        nlp_annotated = spacy.blank("en")
-        if os.path.isfile("../results/outputs/eval_data.json"):
-            with open("../results/outputs/eval_data.json") as f:
-                eval_json = json.load(f)
-            colors = {
-                "TEMP": "#FF0000",
-                "SOFT": "#FFA500",
-                "STIME": "#FD6C9E",
-                "FFM": "#00FFFF",
-                "MOL": "#FFFF00",
-            }
-            options = {
-                "ents": [
-                    "TEMP",
-                    "SOFT",
-                    "STIME",
-                    "FFM",
-                    "MOL",
-                ],
-                "colors": colors,
-            }
-            docs_annotated = []
-            docs_ner = []
-            html = ""
-            for text, annotation in eval_json["annotations"]:
-                doc_ner = nlp_ner(text + 2 * "\n")
-                example = Example.from_dict(
-                    nlp_annotated.make_doc(text + 2 * "\n"), annotation
-                )
-                html += "<hr>\n<b>Texte annoté par Mohmo:</b>" + 3 * "\n"
-                html += displacy.render(example.reference, style="ent", options=options)
-                html += "<b>Texte annoté par MDNER:</b>" + 3 * "\n"
-                html += displacy.render(doc_ner, style="ent", options=options)
-            with open("../results/outputs/html_predict.html", "w") as f:
-                f.write(html)
-            logging.info("HTML file created")
-        else:
-            logging.error("Cannot find the evaluation data.")
+        generate_html()
     else:
         logging.error("Please specify a valid argument.")
