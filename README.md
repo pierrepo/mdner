@@ -21,8 +21,6 @@ Clone the repository:
 git clone https://github.com/pierrepo/mdner.git
 ```
 
-Install [miniconda](https://docs.conda.io/en/latest/miniconda.html).
-
 Install [mamba](https://github.com/mamba-org/mamba):
 
 ```bash
