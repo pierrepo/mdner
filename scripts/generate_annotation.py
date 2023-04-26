@@ -14,7 +14,7 @@ import re
 import logging
 
 parser = argparse.ArgumentParser(
-    description="Generate text and json files in the annotation folder to be used as learning sets."
+    description="Generate text and json files in the annotation folder to be used as training sets."
 )
 parser.add_argument("-c", "--clear", help="Clear the annotation.", action="store_true")
 parser.add_argument(
@@ -221,7 +221,6 @@ if __name__ == "__main__":
         format="[%(asctime)s] [%(levelname)s] %(message)s",
         level=logging.NOTSET,
     )
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
     if args.clear:
         clear_folder()
     generate_annotation(int(args.threshold), float(args.cutoff))
