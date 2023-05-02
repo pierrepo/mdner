@@ -60,24 +60,24 @@ def display_table_entities(data_json: dict):
 
 
 def display_perc_all_entities():
-    """Display the percentage of each entity in the data folder."""
+    """Display the percentage and total of each entity in the data folder."""
     path = "../annotations/"
     name_entities = ["MOL", "STIME", "FFM", "SOFT", "TEMP"]
-    perc_dict = dict.fromkeys(name_entities, 0)
+    ents_dict = dict.fromkeys(name_entities, 0)
     total = 0
     with st.sidebar.expander("Percentage of entities in the data folder :"):
         for json_name in glob.glob(path + "*.json"):
             with open(path + json_name, "r") as json_file:
-                annotation = json.load(json_file)["annotations"][0][1]
-                for _, _, label in annotation["entities"]:
-                    perc_dict[label] += 1
+                annotations = json.load(json_file)["annotations"][0][1]
+                for _, _, label in annotations["entities"]:
+                    ents_dict[label] += 1
                     total += 1
-        for label in perc_dict:
-            perc_dict[label] = [float(perc_dict[label] / total) * 100, perc_dict[label]]
-        perc_entities = pd.DataFrame.from_dict(
-            perc_dict, orient="index", columns=["Percentage", "Total"]
+        for label in ents_dict:
+            ents_dict[label] = [float(ents_dict[label] / total) * 100, ents_dict[label]]
+        df_entities = pd.DataFrame.from_dict(
+            ents_dict, orient="index", columns=["Percentage", "Total"]
         )
-        st.table(perc_entities)
+        st.table(df_entities)
 
 
 def display_infos_entities(data_json: dict):
@@ -510,7 +510,6 @@ def user_interaction() -> None:
     Allows interaction between the user and the set of json files.
     """
     st.set_page_config(page_title="Entity Annotator", layout="wide")
-    os.chdir(os.path.split(os.path.abspath(__file__))[0])
     load_css()
     st.title("Entity Annotator")
     col_msg, _ = st.columns([2, 1])
