@@ -23,12 +23,12 @@ def display_have_text(name_file: str, col_msg: st.columns, data_json: dict) -> N
         The selected json file.
     """
     with col_msg:
-        if not os.path.exists(f"../annotations/{name_file.split('.')[0]}.txt"):
+        if not os.path.exists(f"annotations/{name_file.split('.')[0]}.txt"):
             st.error(
                 f"The text corresponding to the JSON file {name_file} does not exist !",
                 icon="🚨",
             )
-            with open(f"../annotations/{name_file.split('.')[0]}.txt", "w") as f:
+            with open(f"annotations/{name_file.split('.')[0]}.txt", "w") as f:
                 f.write(data_json["annotations"][0][0])
 
 
@@ -61,7 +61,7 @@ def display_table_entities(data_json: dict):
 
 def display_perc_all_entities():
     """Display the percentage and total of each entity in the data folder."""
-    path = "../annotations/"
+    path = "annotations/"
     name_entities = ["MOL", "STIME", "FFM", "SOFT", "TEMP"]
     ents_dict = dict.fromkeys(name_entities, 0)
     total = 0
@@ -454,15 +454,15 @@ def display_filters(json_files: list) -> str:
         search_json = json_search()
         json_selector(json_files)
         if search_json:
-            path_name = "../annotations/" + search_json
+            path_name = "annotations/" + search_json
         else:
             path_name = (
-                "../annotations/"
+                "annotations/"
                 + json_files[st.session_state.slider_json - 1]
                 + ".json"
             )
     else:
-        path_name = "../annotations/" + json_files[0] + ".json"
+        path_name = "annotations/" + json_files[0] + ".json"
     return path_name
 
 
@@ -513,7 +513,7 @@ def user_interaction() -> None:
     load_css()
     st.title("Entity Annotator")
     col_msg, _ = st.columns([2, 1])
-    path = "../annotations/"
+    path = "annotations/"
     json_files = [
         file.split("/")[-1].split(".")[0] for file in glob.glob(path + "*.json")
     ]

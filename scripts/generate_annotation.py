@@ -154,7 +154,7 @@ def create_annotation(df: pd.DataFrame):
     pandas.DataFrame
         The selected datasets.
     """
-    path = "../annotations/"
+    path = "annotations/"
     for i in range(len(df)):
         path_file = path + df.loc[i, "dataset_origin"] + "_" + df.loc[i, "dataset_id"]
         with open(
@@ -208,7 +208,7 @@ def generate_annotation(threshold: int, cutoff: float):
 
 def clear_folder():
     """Remove all files in the folder."""
-    path = "../annotations/"
+    path = "annotations/"
     for txt_file in glob.glob(path + "*.txt"):
         os.remove(txt_file)
     for json_file in glob.glob(path + "*.json"):

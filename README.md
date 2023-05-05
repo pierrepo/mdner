@@ -58,8 +58,7 @@ Generate json files for spaCy NER and text files containing titles and descripti
 Launch the generation of text files and json files :
 
 ```
-cd scripts
-python3 generate_annotation.py
+python3 scripts/generate_annotation.py
 ```
 
 ### Parameters
@@ -81,7 +80,7 @@ options:
 Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `Entity Annotator` to annotate and edit json files by typing the following command :
 
 ```
-streamlit run Entity_Annotator.py
+streamlit run scripts/Entity_Annotator.py
 ```
 
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
@@ -115,8 +114,7 @@ options:
 ### Example
 
 ```
-cd scripts
-python3 mdner.py -c -t 0.4 0.0 0.9 0.1 -g
+python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1 -g
 ```
 
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be hidden). The three other values correspond to the metrics. They allow us to consider what is the best model. Here, for example, we prefer the precision score rather than the recall score.
@@ -126,8 +124,7 @@ Here, we define a model where the dropout will be 0.4 (40% of the nodes will be 
 Evaluate the `mdner` :
 
 ```
-cd scripts
-python3 mdner.py -p
+python3 scripts/mdner.py -p
 ```
 
 After creating the model, a html file will be create in the `results/outputs/` folder.

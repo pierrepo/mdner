@@ -21,6 +21,9 @@ import pandas as pd
 import torch
 from GPUtil import showUtilization as gpu_usage
 from numba import cuda
+from spacy.training.loop import train as train_nlp
+from spacy.training.initialize import init_nlp
+from spacy.util import load_config
 
 # 493
 # 1645
@@ -80,12 +83,12 @@ def create_data() -> list:
         List of dictionaries containing training, test and evaluation data.
     """
     # Get all json files
-    path = "../annotations/"
+    path = "annotations/"
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
     # Split the data into training, test and evaluation data
-    size_train = int(len(json_files) * 0.8)
+    size_train = int(len(json_files) * 0.75)
     size_test = int(len(json_files) * 0.15)
-    size_eval = int(len(json_files) * 0.05)
+    size_eval = int(len(json_files) * 0.10)
     sample_train = random.sample(json_files, size_train)
     sample_test = random.sample(
         [i for i in json_files if i not in sample_train], size_test
@@ -109,6 +112,11 @@ def create_data() -> list:
                     ):
                         if len(data[i]["classes"]) == 0:
                             data[i]["classes"] = data_json["classes"]
+                        # to_keep = []
+                        # for entity in data_json["annotations"][0][1]["entities"]:
+                        #     if entity[2] == "MOL" :
+                        #         to_keep.append(entity)
+                        # data_json["annotations"][0][1]["entities"] = to_keep
                         data[i]["annotations"].append(data_json["annotations"][0])
                     else:
                         ignored += 1
@@ -128,7 +136,7 @@ def create_spacy_object(data: dict, name_file: str):
     name_file: str
         Name of the json file to save the data.
     """
-    with open("../results/outputs/" + name_file + ".json", "w") as f:
+    with open("results/outputs/" + name_file + ".json", "w") as f:
         json.dump(data, f, indent=None)
     # Load a new spacy model
     nlp = spacy.blank("en")
@@ -156,7 +164,7 @@ def create_spacy_object(data: dict, name_file: str):
         doc.ents = ents
         db.add(doc)
     # Save the DocBin object
-    db.to_disk(f"../results/outputs/{name_file}.spacy")
+    db.to_disk(f"results/outputs/{name_file}.spacy")
 
 
 def setup_config(d: float, f: float, p: float, r: float):
@@ -184,11 +192,11 @@ def setup_config(d: float, f: float, p: float, r: float):
         "eval_frequency = 200",
         'vectors = "en_core_web_lg"',
         "batch_size = 1000",
-        "init_tok2vec = null",
+        #"init_tok2vec = null",
     ]
     new_params = [
-        "train = ../results/outputs/train_data.spacy",
-        "dev = ../results/outputs/test_data.spacy",
+        "train = results/outputs/train_data.spacy",
+        "dev = results/outputs/test_data.spacy",
         f"dropout = {d}",
         f"ents_f = {f}",
         f"ents_p = {p}",
@@ -196,10 +204,10 @@ def setup_config(d: float, f: float, p: float, r: float):
         "eval_frequency = 200",
         "vectors = null",
         "batch_size = 32",
-        'init_tok2vec = "en_core_sci_lg"',
+        #'init_tok2vec = "en_core_sci_lg"',
     ]
     # Change the parameters in the config file
-    with open("../results/outputs/config.cfg", "r+") as f:
+    with open("results/outputs/config.cfg", "r+") as f:
         file_contents = f.read()
         for i in range(len(old_params)):
             text_pattern = re.compile(re.escape(old_params[i]), 0)
@@ -212,7 +220,7 @@ def setup_config(d: float, f: float, p: float, r: float):
 def entities_to_csv():
     """Create a csv file with the number of entities per file."""
     # Get the json files
-    path = "../annotations/"
+    path = "annotations/"
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
     to_pandas = []
     # Read each json file and count the number of entities
@@ -228,7 +236,7 @@ def entities_to_csv():
     df = pd.DataFrame(
         to_pandas, columns=["JSON FILE", "MOL", "TEMP", "STIME", "SOFT", "FFM"]
     )
-    df.to_csv("../results/outputs/entities_train.csv", index=False)
+    df.to_csv("results/outputs/entities_train.csv", index=False)
 
 
 def display_command(command: str, display: bool = True):
@@ -285,12 +293,12 @@ def check_debug(output_command: str) -> bool:
 def generate_html():
     """Generate the html file with the evaluation of the model."""
     # Load the best model and an empty model
-    nlp_ner = spacy.load("../results/models_0.4_0.0_0.9_0.1/model-best")
+    nlp_ner = spacy.load("results/colab/only_mol/models/model-best")
     nlp_annotated = spacy.blank("en")
     # Check if evaluation data exists
-    if os.path.isfile("../results/outputs/eval_data.json"):
+    if os.path.isfile("results/outputs/eval_data.json"):
         # Load the evaluation data
-        with open("../results/outputs/eval_data.json") as f:
+        with open("results/outputs/eval_data.json") as f:
             eval_json = json.load(f)
         # Define the colors for the entities
         colors = {
@@ -322,7 +330,7 @@ def generate_html():
             html += "<b>Texte annoté par MDNER:</b>" + 3 * "\n"
             html += displacy.render(doc_ner, style="ent", options=options)
         # Save the html file
-        with open("../results/outputs/html_predict.html", "w") as f:
+        with open("results/outputs/html_predict.html", "w") as f:
             f.write(html)
         logging.info("HTML file created")
     else:
@@ -331,7 +339,7 @@ def generate_html():
 
 def generate_data():
     """Generate train, test and evaluation data in json files and spacy files."""
-    json_files = glob.glob("../results/outputs/*.json")
+    json_files = glob.glob("results/outputs/*.json")
     # Check if data is already created
     if len(json_files) != 3:
         # Create data and save it in spacy files and json files
@@ -366,7 +374,7 @@ def check_gpu():
 
 def debug_config():
     """Run the command to debug the config file and check the output results."""
-    command = "python -m spacy debug data ../results/outputs/config.cfg"
+    command = "python -m spacy debug data results/outputs/config.cfg"
     logging.info(f"Running command: {command}")
     output_command = subprocess.run(command, shell=True, capture_output=True, text=True)
     have_error = check_debug(output_command.stdout)
@@ -387,12 +395,12 @@ def create_config(option_gpu: bool):
     if option_gpu:
         have_gpu = check_gpu()
         if have_gpu:
-            command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline transformer,ner --optimize accuracy -G --force"
+            command = "python -m spacy init config results/outputs/config.cfg --lang en --pipeline transformer,ner --optimize accuracy -G --force"
             display_command(command, display=False)
         else:
             exit(1)
     else:
-        command = "python -m spacy init config ../results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
+        command = "python -m spacy init config results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
         display_command(command, display=False)
 
 
@@ -413,9 +421,28 @@ def training_process(option_gpu: bool, d: float, f: float, p: float, r: float):
     r: float
         The r score of the best model you want to achieve.
     """
-    command = f"python -m spacy train ../results/outputs/config.cfg --output ../results/models_{d}_{f}_{p}_{r} {'--gpu-id 0' if option_gpu else ''} | tee ../results/outputs/train_{d}_{f}_{p}_{r}.log"
+    command = f"python -m spacy train results/outputs/config.cfg --output results/models_{d}_{f}_{p}_{r} {'--gpu-id 0' if option_gpu else ''} | tee results/outputs/train_{d}_{f}_{p}_{r}.log"
     display_command(command)
-    command = f"python -m spacy benchmark accuracy ../results/models_{d}_{f}_{p}_{r}/model-best/ ../results/outputs/eval_data.spacy {'--gpu-id 0' if option_gpu else ''}"
+
+    # config = load_config("results/outputs/config.cfg")
+    # nlp = init_nlp(config)
+
+    # file = open("results/CID-Synonym-filtered")
+    # i = 0
+    # patterns = []
+    # for line in file:
+    #     mol = line.split()[1]
+    #     if mol:
+    #         patterns.append({"label": "MOL", "pattern": mol})
+    #     i += 1
+    #     if i == 100000:
+    #         break
+    # file.close()
+    # entity_ruler = nlp.add_pipe("entity_ruler", after="ner")
+    # entity_ruler.add_patterns(patterns)
+    # nlp, _ = train_nlp(nlp, None)
+
+    command = f"python -m spacy benchmark accuracy results/models_{d}_{f}_{p}_{r}/model-best/ results/outputs/eval_data.spacy {'--gpu-id 0' if option_gpu else ''}"
     display_command(command)
 
 
