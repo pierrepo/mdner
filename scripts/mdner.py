@@ -193,6 +193,7 @@ def setup_config(d: float, f: float, p: float, r: float):
         'vectors = "en_core_web_lg"',
         "batch_size = 1000",
         #"init_tok2vec = null",
+        'name = "roberta-base"' if args.gpu else "init_tok2vec = null",
     ]
     new_params = [
         "train = results/outputs/train_data.spacy",
@@ -205,6 +206,7 @@ def setup_config(d: float, f: float, p: float, r: float):
         "vectors = null",
         "batch_size = 32",
         #'init_tok2vec = "en_core_sci_lg"',
+        'name = "allenai/biomed_roberta_base"' if args.gpu else 'init_tok2vec = "en_core_sci_lg"',
     ]
     # Change the parameters in the config file
     with open("results/outputs/config.cfg", "r+") as f:
