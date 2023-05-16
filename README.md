@@ -66,15 +66,18 @@ python3 scripts/generate_annotation.py
 ```
 usage: generate_annotation.py [-h] [-c] [threshold] [cutoff]
 
-Generate text and json files in the annotation folder to be used as training sets.
+Generate text and json files in the annotation folder to be used as training
+sets.
 
 positional arguments:
-  threshold    The threshold for the description length.
-  cutoff       Select the descriptive texts where the cosine similarity is below the threshold.
+  threshold        The threshold for the length of the descriptive texts.
+  cutoff           Select the descriptive texts where the cosine similarity is
+                   below the threshold.
 
 options:
-  -h, --help   show this help message and exit
-  -c, --clear  Clear the annotation.
+  -h, --help       show this help message and exit
+  -c, --clear      Clear the annotation.
+  -d, --duplicate  Duplicate the annotation.
 ```
 
 Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `Entity Annotator` to annotate and edit json files by typing the following command :
@@ -84,6 +87,12 @@ streamlit run scripts/Entity_Annotator.py
 ```
 
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
+
+If you think you don't have enough data, you can duplicate the annotated texts with the following command:
+```
+python3 scripts/generate_annotation.py -d
+```
+Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way.
 
 ## Create a MDNER
 
