@@ -297,7 +297,7 @@ def predict_paraphrase(text, model, tokenizer) :
     else :
         # Split the text into parts with a maximum size of 1024 characters
         splited_text = split_text(text)
-        predict_text = " ".join(generate_paraphrase(text)[0] for text in splited_text)
+        predict_text = " ".join(generate_paraphrase(text, model, tokenizer)[0] for text in splited_text)
     return predict_text
 
 def found_entity(to_found, text, entities):
@@ -331,16 +331,20 @@ def duplicate_annotation():
     model, tokenizer = load_model_paraphrase()
     for json_file in glob.glob(path + "*.json"):
         path_duplicate = (
-            path + json_file.split(".")[2].split("/")[2] + "_" + "duplicate" + ".json"
+            path + json_file.split(".")[-2].split("/")[-1] + "_" + "duplicate" + ".json"
         )
         if "duplicate" not in json_file or not os.path.exists(path_duplicate):
             with open(json_file, "r") as f_json:
                 c_json = json.load(f_json)
                 text = c_json["annotations"][0][0]
                 annotations = c_json["annotations"][0][1]
-                ents = get_entities(annotations)
+                ents = get_entities(annotations, text)
                 predict_text = predict_paraphrase(text, model, tokenizer)
-                new_entities = [[pos[0], pos[1], ent[1]] for ent in ents if (pos := found_entity(ent[0], predict_text, new_entities)) is not None]
+                new_entities = []
+                for ent in ents:
+                    pos = found_entity(ent[0], predict_text, new_entities)
+                    if pos != None:
+                        new_entities.append([pos[0], pos[1], ent[1]])
                 create_json(path_duplicate, predict_text, new_entities)
 
 
