@@ -351,8 +351,9 @@ if __name__ == "__main__":
         format="[%(asctime)s] [%(levelname)s] %(message)s",
         level=logging.NOTSET,
     )
-    if args.clear:
-        clear_folder()
-    generate_annotation(int(args.threshold), float(args.cutoff))
     if args.duplicate:
         duplicate_annotation()
+    else :
+        if args.clear:
+            clear_folder()
+        generate_annotation(int(args.threshold), float(args.cutoff))
