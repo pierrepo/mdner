@@ -58,21 +58,6 @@ parser.add_argument(
 parser.add_argument("-g", "--gpu", help="Use GPU for training.", action="store_true")
 args = parser.parse_args()
 
-
-# def free_gpu_cache():
-#     print("Initial GPU Usage")
-#     gpu_usage()
-
-#     torch.cuda.empty_cache()
-
-#     cuda.select_device(0)
-#     cuda.close()
-#     cuda.select_device(0)
-
-#     print("GPU Usage after emptying the cache")
-#     gpu_usage()
-
-
 def create_data() -> list:
     """
     Create training, test and evaluation data from the annotations.
@@ -192,7 +177,6 @@ def setup_config(d: float, f: float, p: float, r: float):
         "eval_frequency = 200",
         'vectors = "en_core_web_lg"',
         "batch_size = 1000",
-        #"init_tok2vec = null",
         'name = "roberta-base"' if args.gpu else "init_tok2vec = null",
     ]
     new_params = [
@@ -205,7 +189,6 @@ def setup_config(d: float, f: float, p: float, r: float):
         "eval_frequency = 200",
         "vectors = null",
         "batch_size = 32",
-        #'init_tok2vec = "en_core_sci_lg"',
         'name = "allenai/biomed_roberta_base"' if args.gpu else 'init_tok2vec = "en_core_sci_lg"',
     ]
     # Change the parameters in the config file
