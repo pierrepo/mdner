@@ -147,7 +147,7 @@ def clear_annotation(annotation: str):
 def create_json(path_file: str, text: str, ents: list):
     """
     Create a json file for each annotation.
-    
+
     Parameters
     ----------
     path_file: str
@@ -265,10 +265,11 @@ def generate_paraphrase(input_sentence, model, tokenizer):
     generated_sentence = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
     return generated_sentence
 
+
 def split_text(text):
     # List of punctuation to identify sentences
     punctuations = ["."]
-    
+
     # Divide the text into parts with a maximum size of 1024 characters
     parts = []
     while len(text) > 0:
@@ -278,27 +279,31 @@ def split_text(text):
             index = text.rfind(punctuation, 0, 1024)
             if index > last_punctuation_index:
                 last_punctuation_index = index
-        
+
         if last_punctuation_index == -1:
             # No punctuation found, divide the part to 1024 characters
             parts.append(text[:1024])
             text = text[1024:]
         else:
             # Divide the part at the last punctuation found
-            parts.append(text[:last_punctuation_index+1])
-            text = text[last_punctuation_index+1:]
-    
+            parts.append(text[: last_punctuation_index + 1])
+            text = text[last_punctuation_index + 1 :]
+
     return parts
 
-def predict_paraphrase(text, model, tokenizer) :
+
+def predict_paraphrase(text, model, tokenizer):
     # The length must be less than 1024 characters according the model
     if len(text) < 1024:
         predict_text = generate_paraphrase(text, model, tokenizer)[0]
-    else :
+    else:
         # Split the text into parts with a maximum size of 1024 characters
         splited_text = split_text(text)
-        predict_text = " ".join(generate_paraphrase(text, model, tokenizer)[0] for text in splited_text)
+        predict_text = " ".join(
+            generate_paraphrase(text, model, tokenizer)[0] for text in splited_text
+        )
     return predict_text
+
 
 def found_entity(to_found, text, entities):
     # Find the entity in the text
@@ -329,23 +334,31 @@ def found_entity(to_found, text, entities):
 def duplicate_annotation():
     path = "annotations/"
     model, tokenizer = load_model_paraphrase()
-    for json_file in glob.glob(path + "*.json"):
-        path_duplicate = (
-            path + json_file.split(".")[-2].split("/")[-1] + "_" + "duplicate" + ".json"
-        )
-        if "duplicate" not in json_file or not os.path.exists(path_duplicate):
-            with open(json_file, "r") as f_json:
-                c_json = json.load(f_json)
-                text = c_json["annotations"][0][0]
-                annotations = c_json["annotations"][0][1]
-                ents = get_entities(annotations, text)
-                predict_text = predict_paraphrase(text, model, tokenizer)
-                new_entities = []
-                for ent in ents:
-                    pos = found_entity(ent[0], predict_text, new_entities)
-                    if pos != None:
-                        new_entities.append([pos[0], pos[1], ent[1]])
-                create_json(path_duplicate, predict_text, new_entities)
+    json_files = glob.glob(path + "*.json")
+    if len(json_files) == 0:
+        for json_file in glob.glob(path + "*.json"):
+            path_duplicate = (
+                path
+                + json_file.split(".")[-2].split("/")[-1]
+                + "_"
+                + "duplicate"
+                + ".json"
+            )
+            if "duplicate" not in json_file or not os.path.exists(path_duplicate):
+                with open(json_file, "r") as f_json:
+                    c_json = json.load(f_json)
+                    text = c_json["annotations"][0][0]
+                    annotations = c_json["annotations"][0][1]
+                    ents = get_entities(annotations, text)
+                    predict_text = predict_paraphrase(text, model, tokenizer)
+                    new_entities = []
+                    for ent in ents:
+                        pos = found_entity(ent[0], predict_text, new_entities)
+                        if pos != None:
+                            new_entities.append([pos[0], pos[1], ent[1]])
+                    create_json(path_duplicate, predict_text, new_entities)
+    else:
+        logging.info("No files found")
 
 
 # ------------------------------ END IN PROGRESS -----------------------------------#
@@ -357,7 +370,7 @@ if __name__ == "__main__":
     )
     if args.duplicate:
         duplicate_annotation()
-    else :
+    else:
         if args.clear:
             clear_folder()
         generate_annotation(int(args.threshold), float(args.cutoff))
