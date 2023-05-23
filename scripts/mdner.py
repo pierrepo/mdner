@@ -427,7 +427,7 @@ def training_process(
     name: str
         The name of the model.
     """
-    command = f"python -m spacy train results/outputs/config.cfg --output results/models/{name} {'--gpu-id 0' if option_gpu else ''} | tee results/outputs/train_{d}_{f}_{p}_{r}.log"
+    command = f"python -m spacy train results/outputs/config.cfg --output results/models/{name} {'--gpu-id 0' if option_gpu else ''} | tee results/models/{name}/train.log"
     display_command(command)
 
     # config = load_config("results/outputs/config.cfg")
