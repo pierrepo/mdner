@@ -31,3 +31,4 @@ dependencies:
       - numba
       - spacy[cuda-autodetect]
       - transformers
+      - sentencepiece
