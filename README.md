@@ -64,7 +64,7 @@ python3 scripts/generate_annotation.py
 ### Parameters
 
 ```
-usage: generate_annotation.py [-h] [-c] [threshold] [cutoff]
+usage: generate_annotation.py [-h] [-c] [-d] [threshold] [cutoff]
 
 Generate text and json files in the annotation folder to be used as training
 sets.
@@ -89,9 +89,11 @@ streamlit run scripts/Entity_Annotator.py
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
 
 If you think you don't have enough data, you can duplicate the annotated texts with the following command:
+
 ```
 python3 scripts/generate_annotation.py -d
 ```
+
 Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way.
 
 ## Create a MDNER
@@ -101,7 +103,7 @@ To create the `mdner`, the `-c` and `-t` options must be used. The `-c` option t
 ### Parameters
 
 ```
-usage: mdner.py [-h] [-p | -c] [-t d f p r] [-g]
+usage: mdner.py [-h] [-p | -c] [-t d f p r] [-n NAME] [-g]
 
 Create or call a model for the molecular dynamics data.
 
@@ -116,14 +118,14 @@ options:
                         the percentage of dropout. The f, p and r scores
                         define what SpaCy believes to be the best model after
                         the training process.
+  -n NAME, --name NAME  Name of the model.
   -g, --gpu             Use GPU for training.
-
 ```
 
 ### Example
 
 ```
-python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1 -g
+python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1 -n my_model -g
 ```
 
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be hidden). The three other values correspond to the metrics. They allow us to consider what is the best model. Here, for example, we prefer the precision score rather than the recall score.
