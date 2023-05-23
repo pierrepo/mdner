@@ -55,6 +55,7 @@ parser.add_argument(
     type=float,
     metavar=("d", "f", "p", "r"),
 )
+parser.add_argument("-n", "--name", help="Name of the model.", type=str)
 parser.add_argument("-g", "--gpu", help="Use GPU for training.", action="store_true")
 args = parser.parse_args()
 
@@ -110,7 +111,7 @@ def create_data() -> list:
     return data
 
 
-def create_spacy_object(data: dict, name_file: str):
+def create_spacy_object(data: dict, name_file: str, name_model: str):
     """
     Create a spacy object from the data with the name of the file.
 
@@ -120,6 +121,8 @@ def create_spacy_object(data: dict, name_file: str):
         Dictionary of the data (training, test or evaluation).
     name_file: str
         Name of the json file to save the data.
+    name_model: str
+        Name of the model to save the spacy object.
     """
     with open("results/outputs/" + name_file + ".json", "w") as f:
         json.dump(data, f, indent=None)
@@ -150,6 +153,7 @@ def create_spacy_object(data: dict, name_file: str):
         db.add(doc)
     # Save the DocBin object
     db.to_disk(f"results/outputs/{name_file}.spacy")
+    db.to_disk(f"results/models/{name_model}/{name_file}.spacy")
 
 
 def setup_config(d: float, f: float, p: float, r: float):
@@ -389,7 +393,7 @@ def create_config(option_gpu: bool):
         display_command(command, display=False)
 
 
-def training_process(option_gpu: bool, d: float, f: float, p: float, r: float):
+def training_process(option_gpu: bool, d: float, f: float, p: float, r: float, name: str):
     """
     Execute the commands to train the model and evaluate it.
 
@@ -405,8 +409,10 @@ def training_process(option_gpu: bool, d: float, f: float, p: float, r: float):
         The p score of the best model you want to achieve.
     r: float
         The r score of the best model you want to achieve.
+    name: str
+        The name of the model.
     """
-    command = f"python -m spacy train results/outputs/config.cfg --output results/models_{d}_{f}_{p}_{r} {'--gpu-id 0' if option_gpu else ''} | tee results/outputs/train_{d}_{f}_{p}_{r}.log"
+    command = f"python -m spacy train results/outputs/config.cfg --output results/models/{name} {'--gpu-id 0' if option_gpu else ''} | tee results/outputs/train_{d}_{f}_{p}_{r}.log"
     display_command(command)
 
     # config = load_config("results/outputs/config.cfg")
@@ -427,7 +433,7 @@ def training_process(option_gpu: bool, d: float, f: float, p: float, r: float):
     # entity_ruler.add_patterns(patterns)
     # nlp, _ = train_nlp(nlp, None)
 
-    command = f"python -m spacy benchmark accuracy results/models_{d}_{f}_{p}_{r}/model-best/ results/outputs/eval_data.spacy {'--gpu-id 0' if option_gpu else ''}"
+    command = f"python -m spacy benchmark accuracy results/models/{name}/model-best/ results/outputs/eval_data.spacy {'--gpu-id 0' if option_gpu else ''}"
     display_command(command)
 
 
@@ -436,7 +442,7 @@ if __name__ == "__main__":
         format="[%(asctime)s] [%(levelname)s] %(message)s",
         level=logging.NOTSET,
     )
-    if args.create and args.train:
+    if args.create and args.train and args.name:
         d, f, p, r = args.train
         generate_data()
         # Create config file depending on the GPU availability
@@ -446,7 +452,7 @@ if __name__ == "__main__":
         # Check if the config file is correct
         debug_config()
         # Train the model and evaluate it depending on the GPU availability
-        training_process(args.gpu, d, f, p, r)
+        training_process(args.gpu, d, f, p, r, args.name)
     elif args.predict:
         generate_html()
     else:
