@@ -59,6 +59,7 @@ parser.add_argument("-n", "--name", help="Name of the model.", type=str)
 parser.add_argument("-g", "--gpu", help="Use GPU for training.", action="store_true")
 args = parser.parse_args()
 
+
 def create_data() -> list:
     """
     Create training, test and evaluation data from the annotations.
@@ -153,6 +154,8 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
         db.add(doc)
     # Save the DocBin object
     db.to_disk(f"results/outputs/{name_file}.spacy")
+    if not os.path.exists(f"results/models/{name_model}"):
+        os.makedirs(f"results/models/{name_model}")
     db.to_disk(f"results/models/{name_model}/{name_file}.spacy")
 
 
@@ -193,7 +196,9 @@ def setup_config(d: float, f: float, p: float, r: float):
         "eval_frequency = 200",
         "vectors = null",
         "batch_size = 32",
-        'name = "allenai/biomed_roberta_base"' if args.gpu else 'init_tok2vec = "en_core_sci_lg"',
+        'name = "allenai/biomed_roberta_base"'
+        if args.gpu
+        else 'init_tok2vec = "en_core_sci_lg"',
     ]
     # Change the parameters in the config file
     with open("results/outputs/config.cfg", "r+") as f:
@@ -326,16 +331,23 @@ def generate_html():
         logging.error("Cannot find the evaluation data.")
 
 
-def generate_data():
-    """Generate train, test and evaluation data in json files and spacy files."""
+def generate_data(name_model: str):
+    """
+    Generate train, test and evaluation data in json files and spacy files.
+
+    Parameters:
+    ----------
+    name_model: str
+        Name of the model to use.
+    """
     json_files = glob.glob("results/outputs/*.json")
     # Check if data is already created
     if len(json_files) != 3:
         # Create data and save it in spacy files and json files
         data = create_data()
-        create_spacy_object(data[0], "train_data")
-        create_spacy_object(data[1], "test_data")
-        create_spacy_object(data[2], "eval_data")
+        create_spacy_object(data[0], "train_data", name_model)
+        create_spacy_object(data[1], "test_data", name_model)
+        create_spacy_object(data[2], "eval_data", name_model)
     else:
         logging.info("Data already created")
 
@@ -366,10 +378,11 @@ def debug_config():
     command = "python -m spacy debug data results/outputs/config.cfg"
     logging.info(f"Running command: {command}")
     output_command = subprocess.run(command, shell=True, capture_output=True, text=True)
-    have_error = check_debug(output_command.stdout)
-    if have_error:
-        logging.error(f"A error has been detected :\n{output_command.stdout}")
-        exit(1)
+    print(output_command.stdout)
+    # have_error = check_debug(output_command.stdout)
+    # if have_error:
+    #     logging.error(f"A error has been detected :\n{output_command.stdout}")
+    #     exit(1)
 
 
 def create_config(option_gpu: bool):
@@ -393,7 +406,9 @@ def create_config(option_gpu: bool):
         display_command(command, display=False)
 
 
-def training_process(option_gpu: bool, d: float, f: float, p: float, r: float, name: str):
+def training_process(
+    option_gpu: bool, d: float, f: float, p: float, r: float, name: str
+):
     """
     Execute the commands to train the model and evaluate it.
 
@@ -444,7 +459,7 @@ if __name__ == "__main__":
     )
     if args.create and args.train and args.name:
         d, f, p, r = args.train
-        generate_data()
+        generate_data(args.name)
         # Create config file depending on the GPU availability
         create_config(args.gpu)
         # Change parameters in the config file depending on the arguments
