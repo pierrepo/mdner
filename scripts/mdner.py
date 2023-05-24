@@ -112,6 +112,21 @@ def create_data() -> list:
     return data
 
 
+def cpy_data(name_model: str, name_file: str):
+    """
+    Copy the data from the results/outputs folder to the results/models folder.
+
+    Parameters:
+    -----------
+    name_model: str
+        Name of the model to save the spacy object.
+    name_file: str
+        Name of the json file to save the data.
+    """
+    command = f"cp results/outputs/{name_file}.spacy results/models/{name_model}/{name_file}.spacy"
+    subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
+
+
 def create_spacy_object(data: dict, name_file: str, name_model: str):
     """
     Create a spacy object from the data with the name of the file.
@@ -154,9 +169,10 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
         db.add(doc)
     # Save the DocBin object
     db.to_disk(f"results/outputs/{name_file}.spacy")
-    if not os.path.exists(f"results/models/{name_model}"):
-        os.makedirs(f"results/models/{name_model}")
-    db.to_disk(f"results/models/{name_model}/{name_file}.spacy")
+    cpy_data(name_model, name_file)
+    # command = f"results/models/{name_model}"
+    # subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
+    # db.to_disk(f"results/models/{name_model}/{name_file}.spacy")
 
 
 def setup_config(d: float, f: float, p: float, r: float):
@@ -341,14 +357,16 @@ def generate_data(name_model: str):
         Name of the model to use.
     """
     json_files = glob.glob("results/outputs/*.json")
+    names_file = ["train_data", "test_data", "eval_data"]
     # Check if data is already created
     if len(json_files) != 3:
         # Create data and save it in spacy files and json files
         data = create_data()
-        create_spacy_object(data[0], "train_data", name_model)
-        create_spacy_object(data[1], "test_data", name_model)
-        create_spacy_object(data[2], "eval_data", name_model)
+        for i, name_file in enumerate(names_file):
+            create_spacy_object(data[i], name_file, name_model)
     else:
+        for name_file in names_file:
+            cpy_data(name_model, name_file)
         logging.info("Data already created")
 
 
@@ -379,10 +397,6 @@ def debug_config():
     logging.info(f"Running command: {command}")
     output_command = subprocess.run(command, shell=True, capture_output=True, text=True)
     print(output_command.stdout)
-    # have_error = check_debug(output_command.stdout)
-    # if have_error:
-    #     logging.error(f"A error has been detected :\n{output_command.stdout}")
-    #     exit(1)
 
 
 def create_config(option_gpu: bool):
@@ -427,6 +441,8 @@ def training_process(
     name: str
         The name of the model.
     """
+    command = f"touch results/models/{name}/train.log"
+    subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
     command = f"python -m spacy train results/outputs/config.cfg --output results/models/{name} {'--gpu-id 0' if option_gpu else ''} | tee results/models/{name}/train.log"
     display_command(command)
 
@@ -452,22 +468,39 @@ def training_process(
     display_command(command)
 
 
+def create_folder(name: str):
+    """
+    Create a folder if it does not exist.
+
+    Parameters:
+    ----------
+    name: str
+        The name of the folder to create.
+    """
+    command = f"mkdir results/models/{name}"
+    subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
+
+
 if __name__ == "__main__":
     logging.basicConfig(
         format="[%(asctime)s] [%(levelname)s] %(message)s",
         level=logging.NOTSET,
     )
     if args.create and args.train and args.name:
-        d, f, p, r = args.train
-        generate_data(args.name)
-        # Create config file depending on the GPU availability
-        create_config(args.gpu)
-        # Change parameters in the config file depending on the arguments
-        setup_config(d=d, f=f, p=p, r=r)
-        # Check if the config file is correct
-        debug_config()
-        # Train the model and evaluate it depending on the GPU availability
-        training_process(args.gpu, d, f, p, r, args.name)
+        if os.path.exists(f"results/models/{args.name}"):
+            logging.error("Model already exists. Please choose another name.")
+        else:
+            create_folder(args.name)
+            d, f, p, r = args.train
+            generate_data(args.name)
+            # Create config file depending on the GPU availability
+            create_config(args.gpu)
+            # Change parameters in the config file depending on the arguments
+            setup_config(d=d, f=f, p=p, r=r)
+            # Check if the config file is correct
+            debug_config()
+            # Train the model and evaluate it depending on the GPU availability
+            training_process(args.gpu, d, f, p, r, args.name)
     elif args.predict:
         generate_html()
     else:
