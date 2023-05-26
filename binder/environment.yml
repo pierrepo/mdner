@@ -19,6 +19,7 @@ dependencies:
   # Parquet tools
   - parquet-tools
   - pip:
+      - cupy
       - spacy[cuda-autodetect]
       - watermark
       - spacy-transformers
