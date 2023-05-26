@@ -19,6 +19,7 @@ dependencies:
   # Parquet tools
   - parquet-tools
   - pip:
+      - spacy[cuda-autodetect]
       - watermark
       - spacy-transformers
       - tqdm
@@ -29,6 +30,5 @@ dependencies:
       - streamlit
       - GPUtil
       - numba
-      - spacy[cuda-autodetect]
       - transformers
       - sentencepiece
