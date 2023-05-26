@@ -3,6 +3,7 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import spacy
 import json
+import os
 
 def get_scores(paths_log: list) -> list:
     # Define metrics to plot
@@ -120,7 +121,7 @@ def display_confusion_matrix(cf_mtx: dict, scores: dict, paths_model: list):
 def get_content(path_json, to_reject: list, name_model: str):
     is_readable = all(pattern not in path_json.split("/")[-1] for pattern in to_reject)
     path_paraphrase = path_json[:-5] + "_" + name_model + ".json"
-    if is_readable:
+    if is_readable and os.path.isfile(path_paraphrase):
         with open(path_json, "r") as f_ref, open(
             path_paraphrase, "r"
         ) as f_paraphrase :
