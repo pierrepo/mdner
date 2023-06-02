@@ -13,6 +13,7 @@ import re
 import logging
 from transformers import BartForConditionalGeneration, BartTokenizer
 import spacy
+from tqdm import tqdm
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
@@ -336,7 +337,14 @@ def duplicate_annotation():
     model, tokenizer = load_model_paraphrase()
     json_files = glob.glob(path + "*.json")
     if len(json_files) == 0:
-        for json_file in glob.glob(path + "*.json"):
+        path_files = glob.glob(path + "*.json")
+        files = tqdm(
+            path_files,
+            desc="Paraphrase :",
+            total=len(path_files),
+            bar_format="{l_bar} Size: " + str(len(path_files)),
+        )
+        for json_file in files:
             path_duplicate = (
                 path
                 + json_file.split(".")[-2].split("/")[-1]
