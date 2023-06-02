@@ -33,7 +33,7 @@ parser.add_argument(
     default=0.2,
 )
 parser.add_argument(
-    "-d", "--paraphrase", help="Paraphrase the annotation.", action="store_true"
+    "-p", "--paraphrase", help="Paraphrase the annotation.", action="store_true"
 )
 args = parser.parse_args()
 
