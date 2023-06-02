@@ -338,6 +338,7 @@ def duplicate_annotation():
     json_files = glob.glob(path + "*.json")
     if len(json_files) == 0:
         path_files = glob.glob(path + "*.json")
+        print(path_files)
         files = tqdm(
             path_files,
             desc="Paraphrase :",
