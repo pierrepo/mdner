@@ -14,6 +14,7 @@ import logging
 from transformers import BartForConditionalGeneration, BartTokenizer
 import spacy
 from tqdm import tqdm
+from datetime import datetime
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
@@ -32,7 +33,7 @@ parser.add_argument(
     default=0.2,
 )
 parser.add_argument(
-    "-d", "--duplicate", help="Duplicate the annotation.", action="store_true"
+    "-d", "--paraphrase", help="Paraphrase the annotation.", action="store_true"
 )
 args = parser.parse_args()
 
@@ -332,28 +333,28 @@ def found_entity(to_found, text, entities):
     return None
 
 
-def duplicate_annotation():
+def paraphrase_annotation():
     path = "annotations/"
     model, tokenizer = load_model_paraphrase()
     json_files = glob.glob(path + "*.json")
-    if len(json_files) == 0:
+    if len(json_files) != 0:
         path_files = glob.glob(path + "*.json")
-        print(path_files)
+        description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] Paraphrase processing"
         files = tqdm(
             path_files,
-            desc="Paraphrase :",
+            desc=description,
             total=len(path_files),
-            bar_format="{l_bar} Size: " + str(len(path_files)),
+            bar_format="{l_bar} Files found: " + str(len(path_files)),
         )
         for json_file in files:
-            path_duplicate = (
+            path_paraphrase = (
                 path
                 + json_file.split(".")[-2].split("/")[-1]
                 + "_"
-                + "duplicate"
+                + "paraphrase"
                 + ".json"
             )
-            if "duplicate" not in json_file or not os.path.exists(path_duplicate):
+            if "paraphrase" not in json_file or not os.path.exists(path_paraphrase):
                 with open(json_file, "r") as f_json:
                     c_json = json.load(f_json)
                     text = c_json["annotations"][0][0]
@@ -365,7 +366,7 @@ def duplicate_annotation():
                         pos = found_entity(ent[0], predict_text, new_entities)
                         if pos != None:
                             new_entities.append([pos[0], pos[1], ent[1]])
-                    create_json(path_duplicate, predict_text, new_entities)
+                    create_json(path_paraphrase, predict_text, new_entities)
     else:
         logging.info("No files found")
 
@@ -377,8 +378,8 @@ if __name__ == "__main__":
         format="[%(asctime)s] [%(levelname)s] %(message)s",
         level=logging.NOTSET,
     )
-    if args.duplicate:
-        duplicate_annotation()
+    if args.paraphrase:
+        paraphrase_annotation()
     else:
         if args.clear:
             clear_folder()
