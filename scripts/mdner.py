@@ -372,7 +372,6 @@ def generate_data(name_model: str):
     if len(json_files) != 3:
         # Create data and save it in spacy files and json files
         data = create_data()
-        print(data)
         for i, name_file in enumerate(names_file):
             create_spacy_object(data[i], name_file, name_model)
     else:
