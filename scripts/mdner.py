@@ -69,19 +69,29 @@ def create_data() -> list:
     data: list
         List of dictionaries containing training, test and evaluation data.
     """
-    # Get all json files
+    # Get paraphrase, references and all json files
     path = "annotations/"
+    paraphrase_files = [
+        file.split("/")[-1] for file in glob.glob(path + "*paraphrase.json")
+    ]
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
+    references_files = [
+        json_file for json_file in json_files if json_file not in paraphrase_files
+    ]
     # Split the data into training, test and evaluation data
-    size_train = int(len(json_files) * 0.75)
-    size_test = int(len(json_files) * 0.15)
-    size_eval = int(len(json_files) * 0.10)
+    size_eval = int(len(references_files) * 0.10)
+    sample_eval = random.sample(references_files, size_eval)
+    sample_eval_paraphrase = [
+        file.replace(".json", "_paraphrase.json") for file in sample_eval
+    ]
+    json_files = [
+        file for file in json_files if file not in sample_eval + sample_eval_paraphrase
+    ]
+    size_train = int(len(json_files) * 0.80)
+    size_test = int(len(json_files) * 0.20)
     sample_train = random.sample(json_files, size_train)
     sample_test = random.sample(
         [i for i in json_files if i not in sample_train], size_test
-    )
-    sample_eval = random.sample(
-        [i for i in json_files if i not in sample_train + sample_test], size_eval
     )
     samples = [sample_train, sample_test, sample_eval]
     data = [{"classes": [], "annotations": []} for i in range(3)]
@@ -362,6 +372,7 @@ def generate_data(name_model: str):
     if len(json_files) != 3:
         # Create data and save it in spacy files and json files
         data = create_data()
+        print(data)
         for i, name_file in enumerate(names_file):
             create_spacy_object(data[i], name_file, name_model)
     else:
