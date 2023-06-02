@@ -69,29 +69,19 @@ def create_data() -> list:
     data: list
         List of dictionaries containing training, test and evaluation data.
     """
-    # Get paraphrase, references and all json files
+    # Get all json files
     path = "annotations/"
-    paraphrase_files = [
-        file.split("/")[-1] for file in glob.glob(path + "*paraphrase.json")
-    ]
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
-    references_files = [
-        json_file for json_file in json_files if json_file not in paraphrase_files
-    ]
     # Split the data into training, test and evaluation data
-    size_eval = int(len(references_files) * 0.10)
-    sample_eval = random.sample(references_files, size_eval)
-    sample_eval_paraphrase = [
-        file.replace(".json", "_paraphrase.json") for file in sample_eval
-    ]
-    json_files = [
-        file for file in json_files if file not in sample_eval + sample_eval_paraphrase
-    ]
-    size_train = int(len(json_files) * 0.80)
-    size_test = int(len(json_files) * 0.20)
+    size_train = int(len(json_files) * 0.75)
+    size_test = int(len(json_files) * 0.15)
+    size_eval = int(len(json_files) * 0.10)
     sample_train = random.sample(json_files, size_train)
     sample_test = random.sample(
         [i for i in json_files if i not in sample_train], size_test
+    )
+    sample_eval = random.sample(
+        [i for i in json_files if i not in sample_train + sample_test], size_eval
     )
     samples = [sample_train, sample_test, sample_eval]
     data = [{"classes": [], "annotations": []} for i in range(3)]
