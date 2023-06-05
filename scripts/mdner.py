@@ -76,7 +76,30 @@ def create_data() -> list:
     size_train = int(len(json_files) * 0.75)
     size_test = int(len(json_files) * 0.15)
     size_eval = int(len(json_files) * 0.10)
+    # paraphrase_files = [
+    #     file.split("/")[-1] for file in glob.glob(path + "*paraphrase.json")
+    # ]
+    # json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
+    # references_files = [
+    #     json_file for json_file in json_files if json_file not in paraphrase_files
+    # ]
+    # # Split the data into training, test and evaluation data
+    # size_eval = int(len(references_files) * 0.10)
+    # sample_eval = random.sample(references_files, size_eval)
+    # sample_eval_paraphrase = [
+    #     file.replace(".json", "_paraphrase.json") for file in sample_eval
+    # ]
+    # json_files = [
+    #     file for file in json_files if file not in sample_eval + sample_eval_paraphrase
+    # ]
+    # size_train = int(len(json_files) * 0.80)
+    # size_test = int(len(json_files) * 0.20)
+    # sample_train = random.sample(json_files, size_train)
+    # sample_test = random.sample(
+    #     [i for i in json_files if i not in sample_train], size_test
+    # )
     sample_train = random.sample(json_files, size_train)
+    print(sample_train)
     sample_test = random.sample(
         [i for i in json_files if i not in sample_train], size_test
     )
