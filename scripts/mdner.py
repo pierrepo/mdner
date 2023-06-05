@@ -29,7 +29,7 @@ from spacy.util import load_config
 # 1645
 # 7522
 # 112
-random.seed(112)
+random.seed(7522)
 
 parser = argparse.ArgumentParser(
     description="Create or call a model for the molecular dynamics data."
