@@ -188,8 +188,11 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
             if span is not None:
                 ents.append(span)
         # Label the text with the ents
-        doc.ents = ents
-        db.add(doc)
+        try:
+            doc.ents = ents
+            db.add(doc)
+        except:
+            print(ents)
     # Save the DocBin object
     db.to_disk(f"results/outputs/{name_file}.spacy")
     cpy_data(name_model, name_file)
