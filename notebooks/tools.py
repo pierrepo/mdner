@@ -5,6 +5,7 @@ import spacy
 import json
 import os
 
+
 def get_scores(paths_log: list) -> list:
     # Define metrics to plot
     metrics = ["ENTS_F", "ENTS_P", "ENTS_R"]
@@ -45,6 +46,15 @@ def display_plots(results: list, paths_log: list):
             hue="variable",
             data=pd.melt(df_scores, ["epoch"]),
             ax=axs[0][i],
+        )
+        max_value = max(result["scores"]["ENTS_P"])
+        axs[0][i].axhline(y=max_value, color="r")
+        axs[0][i].text(
+            x=max(result["epoch"]) / 10,
+            y=max_value + 2,
+            s=str(max_value),
+            ha="right",
+            va="center",
         )
         axs[0][i].set_title("Metrics evolution of " + paths_log[i].split("/")[-2])
         axs[0][i].set_xlabel("Epoch")
@@ -117,14 +127,13 @@ def display_confusion_matrix(cf_mtx: dict, scores: dict, paths_model: list):
             style="italic",
             bbox={"facecolor": "blue", "alpha": 0.5, "pad": 10},
         )
-        
+
+
 def get_content(path_json, to_reject: list, name_model: str):
     is_readable = all(pattern not in path_json.split("/")[-1] for pattern in to_reject)
     path_paraphrase = path_json[:-5] + "_" + name_model + ".json"
-    if os.path.isfile(path_paraphrase) and is_readable :
-        with open(path_json, "r") as f_ref, open(
-            path_paraphrase, "r"
-        ) as f_paraphrase :
+    if os.path.isfile(path_paraphrase) and is_readable:
+        with open(path_json, "r") as f_ref, open(path_paraphrase, "r") as f_paraphrase:
             r_json = json.load(f_ref)
             p_json = json.load(f_paraphrase)
             r_txt = r_json["annotations"][0][0]
@@ -134,4 +143,3 @@ def get_content(path_json, to_reject: list, name_model: str):
             return r_txt, p_txt, r_annotations, p_annotations
     else:
         return None
-            
