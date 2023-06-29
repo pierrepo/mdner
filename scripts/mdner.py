@@ -5,7 +5,6 @@ To understand how the model works, please read the documentation of SpaCy in the
 
 import argparse
 import subprocess
-import os
 import logging
 import glob
 import json
@@ -24,12 +23,14 @@ from numba import cuda
 from spacy.training.loop import train as train_nlp
 from spacy.training.initialize import init_nlp
 from spacy.util import load_config
+import signal
+import sys
 
 # 493
 # 1645
 # 7522
 # 112
-random.seed(7522)
+# random.seed(7522)
 
 parser = argparse.ArgumentParser(
     description="Create or call a model for the molecular dynamics data."
@@ -57,55 +58,56 @@ parser.add_argument(
 )
 parser.add_argument("-n", "--name", help="Name of the model.", type=str)
 parser.add_argument("-g", "--gpu", help="Use GPU for training.", action="store_true")
+parser.add_argument(
+    "-d",
+    "--duplicate",
+    help="Add paraphrase in the training dataset",
+    action="store_true",
+)
 args = parser.parse_args()
 
 
-def create_data() -> list:
+def create_data(add_paraphrase: bool) -> list:
     """
     Create training, test and evaluation data from the annotations.
+
+    Parameters:
+    -----------
+    add_paraphrase: bool
+        If True, add paraphrase in the training dataset.
 
     Returns:
     --------
     data: list
         List of dictionaries containing training, test and evaluation data.
     """
-    # Get all json files
     path = "annotations/"
     json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
-    # Split the data into training, test and evaluation data
-    # size_train = int(len(json_files) * 0.75)
-    # size_test = int(len(json_files) * 0.15)
-    # size_eval = int(len(json_files) * 0.10)
     paraphrase_files = [
-        file.split("/")[-1] for file in glob.glob(path + "*paraphrase.json")
+        file.split("/")[-1] for file in glob.glob(path + "*_*_*.json")
     ]
-    json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
-    references_files = [
-        json_file for json_file in json_files if json_file not in paraphrase_files
-    ]
-    # Split the data into training, test and evaluation data
+    references_files = [file for file in json_files if file not in paraphrase_files]
     size_eval = int(len(references_files) * 0.10)
     sample_eval = random.sample(references_files, size_eval)
-    sample_eval_paraphrase = [
-        file.replace(".json", "_paraphrase.json") for file in sample_eval
+    for model in ["mbart", "pegasus", "bart-paraphrase"]:
+        sample_eval_paraphrase = [
+            file.replace(".json", f"_{model}.json") for file in sample_eval
+        ]
+    references_files = [file for file in references_files if file not in sample_eval]
+    paraphrase_files = [
+        file for file in paraphrase_files if file not in sample_eval_paraphrase
     ]
-    json_files = [
-        file for file in json_files if file not in sample_eval + sample_eval_paraphrase
-    ]
-    size_train = int(len(json_files) * 0.80)
-    size_test = int(len(json_files) * 0.20)
-    sample_train = random.sample(json_files, size_train)
+    if add_paraphrase:
+        logging.info("Add paraphrase in the training dataset")
+        learn_files = references_files + paraphrase_files
+    else:
+        learn_files = references_files
+    size_train = int(len(learn_files) * 0.80)
+    size_test = int(len(learn_files) * 0.20)
+    sample_train = random.sample(learn_files, size_train)
     sample_test = random.sample(
-        [i for i in json_files if i not in sample_train], size_test
+        [file for file in learn_files if file not in sample_train], size_test
     )
-    # sample_train = random.sample(json_files, size_train)
-    # print(sample_train)
-    # sample_test = random.sample(
-    #     [i for i in json_files if i not in sample_train], size_test
-    # )
-    # sample_eval = random.sample(
-    #     [i for i in json_files if i not in sample_train + sample_test], size_eval
-    # )
     samples = [sample_train, sample_test, sample_eval]
     data = [{"classes": [], "annotations": []} for i in range(3)]
     ignored = 0
@@ -122,11 +124,13 @@ def create_data() -> list:
                     ):
                         if len(data[i]["classes"]) == 0:
                             data[i]["classes"] = data_json["classes"]
+
                         # to_keep = []
                         # for entity in data_json["annotations"][0][1]["entities"]:
-                        #     if entity[2] == "MOL" :
+                        #     if entity[2] == "MOL":
                         #         to_keep.append(entity)
                         # data_json["annotations"][0][1]["entities"] = to_keep
+
                         data[i]["annotations"].append(data_json["annotations"][0])
                     else:
                         ignored += 1
@@ -163,14 +167,13 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
     name_model: str
         Name of the model to save the spacy object.
     """
-    with open("results/outputs/" + name_file + ".json", "w") as f:
-        json.dump(data, f, indent=None)
-    # Load a new spacy model
+    # Load a blank spacy model
     nlp = spacy.blank("en")
     # Create a DocBin object will be used to create a .spacy file
     db = DocBin()
     # Config the tqdm bar to display
-    description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] Creating {name_file.split('_')[0]} data object"
+    display_name = name_file.split("_")[0][:1].upper() + name_file.split("_")[0][1:] + " " + name_file.split("_")[1]
+    description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] {display_name} "
     annotations = tqdm(
         data["annotations"],
         desc=description,
@@ -192,13 +195,9 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
             doc.ents = ents
             db.add(doc)
         except:
-            print(ents)
+            pass
     # Save the DocBin object
-    db.to_disk(f"results/outputs/{name_file}.spacy")
-    cpy_data(name_model, name_file)
-    # command = f"results/models/{name_model}"
-    # subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
-    # db.to_disk(f"results/models/{name_model}/{name_file}.spacy")
+    db.to_disk(f"results/models/{name_model}/{name_file}.spacy")
 
 
 def setup_config(d: float, f: float, p: float, r: float):
@@ -253,28 +252,6 @@ def setup_config(d: float, f: float, p: float, r: float):
             f.write(file_contents)
 
 
-def entities_to_csv():
-    """Create a csv file with the number of entities per file."""
-    # Get the json files
-    path = "annotations/"
-    json_files = [file.split("/")[-1] for file in glob.glob(path + "*.json")]
-    to_pandas = []
-    # Read each json file and count the number of entities
-    for json_file in json_files:
-        with open(path + json_file, "r") as f:
-            data_json = json.load(f)
-            count = {"MOL": 0, "TEMP": 0, "STIME": 0, "SOFT": 0, "FFM": 0}
-            for ent in data_json["annotations"][1]["entities"]:
-                if ent in count.keys():
-                    count[ent] += 1
-            to_pandas.append([json_file] + list(count.values()))
-    # Save the data in a csv file
-    df = pd.DataFrame(
-        to_pandas, columns=["JSON FILE", "MOL", "TEMP", "STIME", "SOFT", "FFM"]
-    )
-    df.to_csv("results/outputs/entities_train.csv", index=False)
-
-
 def display_command(command: str, display: bool = True):
     """
     Display the command and run it.
@@ -327,73 +304,100 @@ def check_debug(output_command: str) -> bool:
 
 
 def generate_html():
-    """Generate the html file with the evaluation of the model."""
-    # Load the best model and an empty model
-    nlp_ner = spacy.load("results/colab/only_mol/models/model-best")
-    nlp_annotated = spacy.blank("en")
-    # Check if evaluation data exists
-    if os.path.isfile("results/outputs/eval_data.json"):
-        # Load the evaluation data
-        with open("results/outputs/eval_data.json") as f:
-            eval_json = json.load(f)
-        # Define the colors for the entities
-        colors = {
-            "TEMP": "#FF0000",
-            "SOFT": "#FFA500",
-            "STIME": "#FD6C9E",
-            "FFM": "#00FFFF",
-            "MOL": "#FFFF00",
-        }
-        options = {
-            "ents": [
-                "TEMP",
-                "SOFT",
-                "STIME",
-                "FFM",
-                "MOL",
-            ],
-            "colors": colors,
-        }
-        # Generate the html file with the annotations of the model and the annotations of the annotator
-        html = ""
-        for text, annotation in eval_json["annotations"]:
-            doc_ner = nlp_ner(text + 2 * "\n")
-            example = Example.from_dict(
-                nlp_annotated.make_doc(text + 2 * "\n"), annotation
-            )
-            html += "<hr>\n<b>Texte annoté par Mohmo:</b>" + 3 * "\n"
-            html += displacy.render(example.reference, style="ent", options=options)
-            html += "<b>Texte annoté par MDNER:</b>" + 3 * "\n"
-            html += displacy.render(doc_ner, style="ent", options=options)
-        # Save the html file
-        with open("results/outputs/html_predict.html", "w") as f:
-            f.write(html)
-        logging.info("HTML file created")
-    else:
-        logging.error("Cannot find the evaluation data.")
+    path_model = "results/models/my_model"
+    ner = spacy.load(f"{path_model}/model-best/")
+    with open(f"{path_model}/eval_data.spacy", "rb") as f:
+        doc_bin = spacy.tokens.DocBin().from_bytes(f.read())
+    colors = {
+        "TEMP": "#FF0000",
+        "SOFT": "#FFA500",
+        "STIME": "#FD6C9E",
+        "FFM": "#00FFFF",
+        "MOL": "#FFFF00",
+    }
+    options = {
+        "ents": [
+            "TEMP",
+            "SOFT",
+            "STIME",
+            "FFM",
+            "MOL",
+        ],
+        "colors": colors,
+    }
+    # Generate the html file with the annotations of the model and the annotations of the annotator
+    html = ""
+    for doc in doc_bin.get_docs(ner.vocab):
+        html += "<b>Texte annoté par MDNER:</b>" + 3 * "\n"
+        html += displacy.render(doc, style="ent", options=options)
+        html += 6 * "\n"
+    # Save the html file
+    with open("results/outputs/html_predict.html", "w") as f:
+        f.write(html)
+    logging.info("HTML file created")
+
+    # """Generate the html file with the evaluation of the model."""
+    # # Load the best model and an empty model
+    # nlp_ner = spacy.load("results/models/my_model/model-best")
+    # nlp_annotated = spacy.blank("en")
+    # # Check if evaluation data exists
+    # if os.path.isfile("results/outputs/eval_data.json"):
+    #     # Load the evaluation data
+    #     with open("results/outputs/eval_data.json") as f:
+    #         eval_json = json.load(f)
+    #     # Define the colors for the entities
+    #     colors = {
+    #         "TEMP": "#FF0000",
+    #         "SOFT": "#FFA500",
+    #         "STIME": "#FD6C9E",
+    #         "FFM": "#00FFFF",
+    #         "MOL": "#FFFF00",
+    #     }
+    #     options = {
+    #         "ents": [
+    #             "TEMP",
+    #             "SOFT",
+    #             "STIME",
+    #             "FFM",
+    #             "MOL",
+    #         ],
+    #         "colors": colors,
+    #     }
+    #     # Generate the html file with the annotations of the model and the annotations of the annotator
+    #     html = ""
+    #     for text, annotation in eval_json["annotations"]:
+    #         doc_ner = nlp_ner(text + 2 * "\n")
+    #         example = Example.from_dict(
+    #             nlp_annotated.make_doc(text + 2 * "\n"), annotation
+    #         )
+    #         html += "<hr>\n<b>Texte annoté par Mohmo:</b>" + 3 * "\n"
+    #         html += displacy.render(example.reference, style="ent", options=options)
+    #         html += "<b>Texte annoté par MDNER:</b>" + 3 * "\n"
+    #         html += displacy.render(doc_ner, style="ent", options=options)
+    #     # Save the html file
+    #     with open("results/outputs/html_predict.html", "w") as f:
+    #         f.write(html)
+    #     logging.info("HTML file created")
+    # else:
+    #     logging.error("Cannot find the evaluation data.")
 
 
-def generate_data(name_model: str):
+def generate_data(name_model: str, add_paraphrase: bool = False):
     """
-    Generate train, test and evaluation data in json files and spacy files.
+    Generate train, test and evaluation data from the annotated data.
 
     Parameters:
     ----------
     name_model: str
         Name of the model to use.
+    add_paraphrase: bool
+        If True, the paraphrase data will be added to the train data.
     """
-    json_files = glob.glob("results/outputs/*.json")
     names_file = ["train_data", "test_data", "eval_data"]
-    # Check if data is already created
-    if len(json_files) != 3:
-        # Create data and save it in spacy files and json files
-        data = create_data()
-        for i, name_file in enumerate(names_file):
-            create_spacy_object(data[i], name_file, name_model)
-    else:
-        for name_file in names_file:
-            cpy_data(name_model, name_file)
-        logging.info("Data already created")
+    # Create data and save it in spacy files and json files
+    data = create_data(add_paraphrase)
+    for i, name_file in enumerate(names_file):
+        create_spacy_object(data[i], name_file, name_model)
 
 
 def check_gpu():
@@ -442,6 +446,7 @@ def create_config(option_gpu: bool):
         else:
             exit(1)
     else:
+        # Create the config file
         command = "python -m spacy init config results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
         display_command(command, display=False)
 
@@ -467,29 +472,13 @@ def training_process(
     name: str
         The name of the model.
     """
+    # Create the train.log file
     command = f"touch results/models/{name}/train.log"
     subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
+    # Train the model
     command = f"python -m spacy train results/outputs/config.cfg --output results/models/{name} {'--gpu-id 0' if option_gpu else ''} | tee results/models/{name}/train.log"
     display_command(command)
-
-    # config = load_config("results/outputs/config.cfg")
-    # nlp = init_nlp(config)
-
-    # file = open("results/CID-Synonym-filtered")
-    # i = 0
-    # patterns = []
-    # for line in file:
-    #     mol = line.split()[1]
-    #     if mol:
-    #         patterns.append({"label": "MOL", "pattern": mol})
-    #     i += 1
-    #     if i == 100000:
-    #         break
-    # file.close()
-    # entity_ruler = nlp.add_pipe("entity_ruler", after="ner")
-    # entity_ruler.add_patterns(patterns)
-    # nlp, _ = train_nlp(nlp, None)
-
+    # Evaluate the model
     command = f"python -m spacy benchmark accuracy results/models/{name}/model-best/ results/outputs/eval_data.spacy {'--gpu-id 0' if option_gpu else ''}"
     display_command(command)
 
@@ -505,6 +494,18 @@ def create_folder(name: str):
     """
     command = f"mkdir results/models/{name}"
     subprocess.run(command, shell=True, stdout=subprocess.DEVNULL)
+    
+def remove_folder(name: str):
+    """
+    Remove a folder if it exists.
+    
+    Parameters:
+    ----------
+    name: str
+        The name of the folder to remove.
+    """
+    command = f"rm -rf results/models/{name}"
+    subprocess.run(command, shell=True, stdout=subprocess.DEVNULL) 
 
 
 if __name__ == "__main__":
@@ -513,12 +514,10 @@ if __name__ == "__main__":
         level=logging.NOTSET,
     )
     if args.create and args.train and args.name:
-        if os.path.exists(f"results/models/{args.name}"):
-            logging.error("Model already exists. Please choose another name.")
-        else:
+        try :
             create_folder(args.name)
             d, f, p, r = args.train
-            generate_data(args.name)
+            generate_data(args.name, args.duplicate)
             # Create config file depending on the GPU availability
             create_config(args.gpu)
             # Change parameters in the config file depending on the arguments
@@ -527,6 +526,10 @@ if __name__ == "__main__":
             debug_config()
             # Train the model and evaluate it depending on the GPU availability
             training_process(args.gpu, d, f, p, r, args.name)
+        except KeyboardInterrupt:
+            signal.signal(signal.SIGINT, lambda _: sys.exit(0))
+            logging.error("Process interrupted by the user.")
+            remove_folder(args.name)    
     elif args.predict:
         generate_html()
     else:
