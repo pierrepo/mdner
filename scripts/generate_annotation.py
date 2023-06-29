@@ -11,7 +11,10 @@ import json
 import unicodedata
 import re
 import logging
+from transformers import PegasusTokenizerFast, PegasusForConditionalGeneration
+from transformers import MBartForConditionalGeneration, MBart50TokenizerFast
 from transformers import BartForConditionalGeneration, BartTokenizer
+import transformers
 import spacy
 from tqdm import tqdm
 from datetime import datetime
@@ -33,7 +36,7 @@ parser.add_argument(
     default=0.2,
 )
 parser.add_argument(
-    "-p", "--paraphrase", help="Paraphrase the annotation.", action="store_true"
+    "-p", "--paraphrase", help="Paraphrase the annotation.", choices=["mbart", "bart-paraphrase", "pegasus"]
 )
 args = parser.parse_args()
 
@@ -170,6 +173,7 @@ def create_json(path_file: str, text: str, ents: list):
             ],
             "annotations": [[text, {"entities": ents}]],
         }
+        # Save the annotation in a json file
         json.dump(dict_annotations, json_file)
 
 
@@ -212,10 +216,10 @@ def generate_annotation(threshold: int, cutoff: float):
     """
     df = load_data()
     id_selected = df["dataset_id"].tolist()
-    # Prerequise for the annotation
+    # Selects texts according to their length and corpus similarity
     id_selected = text_length(id_selected, df, threshold)
     id_selected = corpus_similarity(id_selected, df, cutoff)
-    # Setups the data
+    # Selects the columns of interest
     data = df[df["dataset_id"].isin(id_selected)].copy()
     data = data.reset_index(drop=True)
     # Cleaning up the annotation
@@ -235,24 +239,80 @@ def clear_folder():
     logging.info("Folder cleared")
 
 
-# ------------------------------ START IN PROGRESS -----------------------------------#
-
-
-def load_model_paraphrase():
-    model = BartForConditionalGeneration.from_pretrained("eugenesiow/bart-paraphrase")
-    tokenizer = BartTokenizer.from_pretrained("eugenesiow/bart-paraphrase")
+def load_model_paraphrase(choice_model: str):
+    """
+    Load the model and the tokenizer for paraphrase.
+    
+    Parameters
+    ----------
+    choice_model: str
+        The model to use for paraphrase.
+        
+    Returns
+    -------
+    transformers.PreTrainedModel
+        The model for paraphrase.
+    transformers.PreTrainedTokenizerFast
+        The tokenizer for paraphrase.
+    """
+    if choice_model == "pegasus":
+        model_name = "tuner007/pegasus_paraphrase"
+        model = PegasusForConditionalGeneration.from_pretrained(model_name)
+        tokenizer = PegasusTokenizerFast.from_pretrained(model_name)
+    elif choice_model == "bart-paraphrase":
+        model_name = "eugenesiow/bart-paraphrase"
+        model = BartForConditionalGeneration.from_pretrained(model_name)
+        tokenizer = BartTokenizer.from_pretrained(model_name)
+    else :
+        model_name = "facebook/mbart-large-50-many-to-many-mmt"
+        model = MBartForConditionalGeneration.from_pretrained(model_name)
+        tokenizer = MBart50TokenizerFast.from_pretrained(model_name, use_fast=False)
     return model, tokenizer
 
 
-def get_entities(annotations, text):
+def get_entities(annotations: dict, text: str):
+    """
+    Get the entities of the annotation.
+    
+    Parameters
+    ----------
+    annotations: dict
+        The annotations of the dataset.
+    text: str
+        The text of the annotation.
+        
+    Returns
+    -------
+    list
+        The entities of the annotation.
+    """
     ents = []
     for ent in annotations["entities"]:
         ents.append((text[ent[0] : ent[1]], ent[2]))
     return ents
 
 
-def generate_paraphrase(input_sentence, model, tokenizer):
-    batch = tokenizer(input_sentence, return_tensors="pt", padding="longest")
+def generate_paraphrase(input_sentence: str, model: transformers.PreTrainedModel, tokenizer: transformers.PreTrainedTokenizerFast, is_pegasus: bool):
+    """
+    Generate a paraphrase of the input sentence.
+    
+    Parameters
+    ----------
+    input_sentence: str
+        The input sentence.
+    model: transformers.PreTrainedModel
+        The model for paraphrase.
+    tokenizer: transformers.PreTrainedTokenizerFast
+        The tokenizer for paraphrase.
+    is_pegasus: bool
+        True if the model is Pegasus, False otherwise.
+        
+    Returns
+    -------
+    str
+        The paraphrase of the input sentence.
+    """
+    batch = tokenizer(input_sentence, return_tensors="pt", padding="longest", truncation=is_pegasus)
     generated_ids = model.generate(
         batch["input_ids"],
         temperature=1.2,
@@ -268,7 +328,19 @@ def generate_paraphrase(input_sentence, model, tokenizer):
     return generated_sentence
 
 
-def split_text(text):
+def split_text(text: str):
+    """
+    Split the text into parts with a maximum size of 1024 characters.
+
+    Parameters
+    ----------
+    text: str
+    
+    Returns
+    -------
+    list
+        The parts of the text.
+    """
     # List of punctuation to identify sentences
     punctuations = ["."]
 
@@ -294,20 +366,56 @@ def split_text(text):
     return parts
 
 
-def predict_paraphrase(text, model, tokenizer):
+def predict_paraphrase(text: str, model: transformers.PreTrainedModel, tokenizer: transformers.PreTrainedTokenizerFast, choice_model: str):
+    """
+    Predict the paraphrase of the text.
+    
+    Parameters
+    ----------
+    text: str
+        The text to paraphrase.
+    model: transformers.PreTrainedModel
+        The model for paraphrase.
+    tokenizer: transformers.PreTrainedTokenizerFast
+        The tokenizer for paraphrase.
+    choice_model: str
+        The model to use for paraphrase.
+        
+    Returns
+    -------
+    str
+        The paraphrase of the text.
+    """
     # The length must be less than 1024 characters according the model
     if len(text) < 1024:
-        predict_text = generate_paraphrase(text, model, tokenizer)[0]
+        predict_text = generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[0]
     else:
         # Split the text into parts with a maximum size of 1024 characters
         splited_text = split_text(text)
         predict_text = " ".join(
-            generate_paraphrase(text, model, tokenizer)[0] for text in splited_text
+            generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[0] for text in splited_text
         )
     return predict_text
 
 
-def found_entity(to_found, text, entities):
+def found_entity(to_found: str, text: str, entities: list):
+    """
+    Find the entity in the text.
+    
+    Parameters
+    ----------
+    to_found: str
+        The entity to find.
+    text: str
+        The text to search.
+    entities: list
+        The entities already found.
+    
+    Returns
+    -------
+    tuple
+        The start and end index of the entity if found, None otherwise.
+    """
     # Find the entity in the text
     exist = False
     to_found = to_found.lower()
@@ -333,34 +441,46 @@ def found_entity(to_found, text, entities):
     return None
 
 
-def paraphrase_annotation():
+def paraphrase_annotation(choice_model: str):
+    """
+    Paraphrase the annotations of the dataset.
+    
+    Parameters
+    ----------
+    choice_model: str
+        The model to use for paraphrase.
+    """
     path = "annotations/"
-    model, tokenizer = load_model_paraphrase()
-    json_files = glob.glob(path + "*.json")
-    if len(json_files) != 0:
-        path_files = glob.glob(path + "*.json")
-        description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] Paraphrase processing"
+    model, tokenizer = load_model_paraphrase(choice_model)
+    models = ["pegasus", "bart-paraphrase", "mbart"]
+    # Find the original files
+    path_files = [file for file in glob.glob(path + "*.json") if not any(x in file for x in models)]
+    if len(path_files) != 0:
+        description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] Paraphrase processing with {choice_model} model"
         files = tqdm(
             path_files,
             desc=description,
             total=len(path_files),
             bar_format="{l_bar} Files found: " + str(len(path_files)),
         )
+        # Paraphrase the annotations
         for json_file in files:
             path_paraphrase = (
                 path
                 + json_file.split(".")[-2].split("/")[-1]
                 + "_"
-                + "paraphrase"
+                + choice_model
                 + ".json"
             )
-            if "paraphrase" not in json_file or not os.path.exists(path_paraphrase):
+            # Check if the paraphrase already exists
+            if choice_model not in json_file or not os.path.exists(path_paraphrase):
+                # Read the json file and paraphrase the annotations
                 with open(json_file, "r") as f_json:
                     c_json = json.load(f_json)
                     text = c_json["annotations"][0][0]
                     annotations = c_json["annotations"][0][1]
                     ents = get_entities(annotations, text)
-                    predict_text = predict_paraphrase(text, model, tokenizer)
+                    predict_text = predict_paraphrase(text, model, tokenizer, choice_model)
                     new_entities = []
                     for ent in ents:
                         pos = found_entity(ent[0], predict_text, new_entities)
@@ -371,15 +491,13 @@ def paraphrase_annotation():
         logging.info("No files found")
 
 
-# ------------------------------ END IN PROGRESS -----------------------------------#
-
 if __name__ == "__main__":
     logging.basicConfig(
         format="[%(asctime)s] [%(levelname)s] %(message)s",
         level=logging.NOTSET,
     )
     if args.paraphrase:
-        paraphrase_annotation()
+        paraphrase_annotation(args.paraphrase)
     else:
         if args.clear:
             clear_folder()
