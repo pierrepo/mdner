@@ -71,21 +71,21 @@ def display_plots(results: list, paths_log: list):
         axs[1][i].set_ylabel("Loss value")
 
 
-def get_entities(doc, only_mol):
+def get_entities(doc, label):
     ents = [(ent.text, ent.start_char, ent.end_char, ent.label_) for ent in doc.ents]
-    if only_mol:
-        ents = [ent for ent in ents if ent[3] == "MOL"]
+    if label:
+        ents = [ent for ent in ents if ent[3] == label]
     return ents
 
 
-def get_confusion_matrix(path_model, only_mol):
+def get_confusion_matrix(path_model, label):
     ner = spacy.load(f"{path_model}/model-best/")
     with open(f"{path_model}/eval_data.spacy", "rb") as f:
         doc_bin = spacy.tokens.DocBin().from_bytes(f.read())
     tp, fp, fn, tn = 0, 0, 0, 0
     for doc in doc_bin.get_docs(ner.vocab):
-        pred_ents = get_entities(ner(doc.text), only_mol)
-        true_ents = get_entities(doc, only_mol)
+        pred_ents = get_entities(ner(doc.text), label)
+        true_ents = get_entities(doc, label)
         tp += len([ent for ent in true_ents if ent in pred_ents])
         fp += len([ent for ent in pred_ents if ent not in true_ents])
         fn += len([ent for ent in true_ents if ent not in pred_ents])
