@@ -67,7 +67,7 @@ def load_data():
     return df
 
 
-def text_length(id_selected: list, df: pd.DataFrame, threshold: float):
+def text_length(id_selected: list, df: pd.DataFrame, threshold: float) -> pd.DataFrame:
     """
     Select datasets where the length of the text is greater than the threshold.
 
@@ -92,7 +92,9 @@ def text_length(id_selected: list, df: pd.DataFrame, threshold: float):
     return selected
 
 
-def corpus_similarity(id_selected: list, df: pd.DataFrame, cutoff: float):
+def corpus_similarity(
+    id_selected: list, df: pd.DataFrame, cutoff: float
+) -> pd.DataFrame:
     """
     Select n data with low similarity to other texts.
 
@@ -131,7 +133,7 @@ def corpus_similarity(id_selected: list, df: pd.DataFrame, cutoff: float):
     return selected
 
 
-def clear_annotation(annotation: str):
+def clear_annotation(annotation: str) -> str:
     """
     Remove some characters from the annotation.
 
@@ -188,7 +190,7 @@ def create_json(path_file: str, text: str, ents: list):
         json.dump(dict_annotations, json_file)
 
 
-def create_annotation(df: pd.DataFrame):
+def create_annotation(df: pd.DataFrame) -> pd.DataFrame:
     """
     Create a file for each annotation.
 
@@ -250,7 +252,7 @@ def clear_folder():
     logging.info("Folder cleared")
 
 
-def load_model_paraphrase(choice_model: str, seed: int):
+def load_model_paraphrase(choice_model: str, seed: int) -> tuple:
     """
     Load the model and the tokenizer for paraphrase.
 
@@ -263,10 +265,8 @@ def load_model_paraphrase(choice_model: str, seed: int):
 
     Returns
     -------
-    transformers.PreTrainedModel
-        The model for paraphrase.
-    transformers.PreTrainedTokenizerFast
-        The tokenizer for paraphrase.
+    tuple
+        The model and the tokenizer.
     """
     transformers.set_seed(seed)
     if choice_model == "pegasus":
@@ -285,7 +285,7 @@ def load_model_paraphrase(choice_model: str, seed: int):
     return model, tokenizer
 
 
-def get_entities(annotations: dict, text: str):
+def get_entities(annotations: dict, text: str) -> list:
     """
     Get the entities of the annotation.
 
@@ -312,7 +312,7 @@ def generate_paraphrase(
     model: transformers.PreTrainedModel,
     tokenizer: transformers.PreTrainedTokenizerFast,
     is_pegasus: bool,
-):
+) -> str:
     """
     Generate a paraphrase of the input sentence.
 
@@ -350,7 +350,7 @@ def generate_paraphrase(
     return generated_sentence
 
 
-def split_text(text: str):
+def split_text(text: str) -> list:
     """
     Split the text into parts with a maximum size of 1024 characters.
 
@@ -393,7 +393,7 @@ def predict_paraphrase(
     model: transformers.PreTrainedModel,
     tokenizer: transformers.PreTrainedTokenizerFast,
     choice_model: str,
-):
+) -> str:
     """
     Predict the paraphrase of the text.
 
@@ -428,7 +428,7 @@ def predict_paraphrase(
     return predict_text
 
 
-def found_entity(to_found: str, text: str, entities: list):
+def found_entity(to_found: str, text: str, entities: list) -> tuple:
     """
     Find the entity in the text.
 
