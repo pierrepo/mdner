@@ -44,7 +44,7 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--seed",
-    help="Set the seed for reproducibility.",
+    help="Set the seed for reproducibility in paraphrase.",
     type=int,
     default=42,
 )
