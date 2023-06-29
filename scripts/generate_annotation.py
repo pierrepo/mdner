@@ -38,6 +38,13 @@ parser.add_argument(
 parser.add_argument(
     "-p", "--paraphrase", help="Paraphrase the annotation.", choices=["mbart", "bart-paraphrase", "pegasus"]
 )
+parser.add_argument(
+    "-s",
+    "--seed",
+    help="Set the seed for reproducibility.",
+    type=int,
+    default=42,
+)
 args = parser.parse_args()
 
 
@@ -239,7 +246,7 @@ def clear_folder():
     logging.info("Folder cleared")
 
 
-def load_model_paraphrase(choice_model: str):
+def load_model_paraphrase(choice_model: str, seed: int):
     """
     Load the model and the tokenizer for paraphrase.
     
@@ -247,6 +254,8 @@ def load_model_paraphrase(choice_model: str):
     ----------
     choice_model: str
         The model to use for paraphrase.
+    seed: int
+        The seed for reproducibility.
         
     Returns
     -------
@@ -255,6 +264,7 @@ def load_model_paraphrase(choice_model: str):
     transformers.PreTrainedTokenizerFast
         The tokenizer for paraphrase.
     """
+    transformers.set_seed(seed)
     if choice_model == "pegasus":
         model_name = "tuner007/pegasus_paraphrase"
         model = PegasusForConditionalGeneration.from_pretrained(model_name)
@@ -267,6 +277,7 @@ def load_model_paraphrase(choice_model: str):
         model_name = "facebook/mbart-large-50-many-to-many-mmt"
         model = MBartForConditionalGeneration.from_pretrained(model_name)
         tokenizer = MBart50TokenizerFast.from_pretrained(model_name, use_fast=False)
+    logging.info("Seed: " + str(seed))
     return model, tokenizer
 
 
@@ -441,7 +452,7 @@ def found_entity(to_found: str, text: str, entities: list):
     return None
 
 
-def paraphrase_annotation(choice_model: str):
+def paraphrase_annotation(choice_model: str, seed: int):
     """
     Paraphrase the annotations of the dataset.
     
@@ -449,9 +460,11 @@ def paraphrase_annotation(choice_model: str):
     ----------
     choice_model: str
         The model to use for paraphrase.
+    seed: int
+        The seed for the random generator.
     """
     path = "annotations/"
-    model, tokenizer = load_model_paraphrase(choice_model)
+    model, tokenizer = load_model_paraphrase(choice_model, seed)
     models = ["pegasus", "bart-paraphrase", "mbart"]
     # Find the original files
     path_files = [file for file in glob.glob(path + "*.json") if not any(x in file for x in models)]
@@ -497,7 +510,7 @@ if __name__ == "__main__":
         level=logging.NOTSET,
     )
     if args.paraphrase:
-        paraphrase_annotation(args.paraphrase)
+        paraphrase_annotation(args.paraphrase, args.seed)
     else:
         if args.clear:
             clear_folder()
