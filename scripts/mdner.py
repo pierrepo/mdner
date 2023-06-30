@@ -1,6 +1,7 @@
 """This script is used to create a model for the molecular dynamics data by using the SpaCy library.
 
-To understand how the model has been built and works, please read the documentation of SpaCy in the following link: https://spacy.io/usage/training
+To understand how the model has been built and works, please read the
+documentation of SpaCy in the following link: https://spacy.io/usage/training
 """
 
 import argparse
@@ -62,12 +63,12 @@ def get_files() -> list:
 def create_eval_data(references_files: list) -> tuple:
     """
     Create the evaluation dataset by using 10% of the references files.
-    
+
     Parameters
     ----------
     references_files : list
         List of the references files.
-        
+
     Returns
     -------
     tuple
@@ -91,7 +92,7 @@ def add_paraphrase_in_data(
 ) -> list:
     """
     Add paraphrase in the training and test dataset.
-    
+
     Parameters
     ----------
     references_files : list
@@ -104,7 +105,7 @@ def add_paraphrase_in_data(
         List of the paraphrase files used for the evaluation.
     add_paraphrase : bool
         If True, add paraphrase in the training dataset.
-        
+
     Returns
     -------
     list
@@ -125,12 +126,12 @@ def add_paraphrase_in_data(
 def create_learn_data(learn_files: list) -> tuple:
     """
     Create the training and test dataset from the learn files.
-    
+
     Parameters
     ----------
     learn_files : list
         List of the files used for the training and test dataset.
-        
+
     Returns
     -------
     tuple
@@ -148,12 +149,12 @@ def create_learn_data(learn_files: list) -> tuple:
 def extract_mol_entities(data_json: dict) -> list:
     """
     Extract the MOL entities from the json file.
-    
+
     Parameters
     ----------
     data_json : dict
         Content of the json file.
-    
+
     Returns
     -------
     list
@@ -169,14 +170,14 @@ def extract_mol_entities(data_json: dict) -> list:
 def data_selection(samples: list, only_mol: bool) -> list:
     """
     Filter the data by keeping a maximum of 1% of entities or only MOL entities.
-    
+
     Parameters
     ----------
     samples : list
         List of the samples.
     only_mol : bool
         If True, keep only MOL entities.
-        
+
     Returns
     -------
     list
@@ -291,7 +292,7 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
         try:
             doc.ents = ents
             db.add(doc)
-        except:
+        except Exception:
             pass
     # Save the DocBin object
     db.to_disk(f"results/models/{name_model}/{name_file}.spacy")

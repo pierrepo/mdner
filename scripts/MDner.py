@@ -1,6 +1,8 @@
 """This script is used to annotate the text with the best model.
 
-The best model is loaded and applied to the text. The entities are visualized in html using Streamlit. To understand how the model works, it is recommended to read the documentation of the model.
+The best model is loaded and applied to the text. The entities are visualized
+in html using Streamlit. To understand how the model works, it is recommended
+to read the documentation of the model.
 """
 
 import streamlit as st
@@ -13,10 +15,11 @@ parser = argparse.ArgumentParser(description="MDner - Streamlit")
 parser.add_argument("-m", "--model", dest="model", help="Model name", required=True)
 args = parser.parse_args()
 
+
 def use_model(model):
     """
     Use the model to annotate the text by using Streamlit.
-    
+
     Parameters
     ----------
     model : str
