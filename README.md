@@ -1,57 +1,61 @@
 # Molecular dynamics named entity recognition
 
-A Named Entity Recognition model for molecular dynamics data.
+**A Named Entity Recognition model for molecular dynamics data.**
+
+MDNER is a NER model developed specifically to extract information from MD simulations. It is used to identify the names of the molecules simulated, the simulation time, the force field or molecular model used, the simulation temperature and the name of the software used to run the simulations. This is the minimum information required to describe a MD simulation. 
+
+
 
 [![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
 ![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)
 
-## Prerequisites
+## 🔧 Prerequisites
 
 ### Hardware
 
-For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code.
+For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage/spacy-101).
 
-## Setup your environment
+## 📦 Setup your environment
 
-Clone the repository:
+Clone the repository :
 
 ```bash
 git clone https://github.com/pierrepo/mdner.git
 ```
 
-Install [mamba](https://github.com/mamba-org/mamba):
+Install [mamba](https://github.com/mamba-org/mamba) :
 
 ```bash
 conda install mamba -n base -c conda-forge
 ```
 
-Create the `mdner` conda environment:
+Create the `mdner` conda environment :
 
 ```
 mamba env create -f binder/environment.yml
 ```
 
-Load the `mdner` conda environment:
+Load the `mdner` conda environment :
 
 ```
 conda activate mdner
 ```
 
-Note: you can also update the conda environment with:
+Note: you can also update the conda environment with :
 
 ```bash
 mamba env update -f binder/environment.yml
 ```
 
-To deactivate an active environment, use
+To deactivate an active environment, use :
 
 ```
 conda deactivate
 ```
 
-## Generate annotations data
+## ✍ Generate annotations data
 
 Generate json files for spaCy NER and text files containing titles and descriptions of our MD datasets available [here](https://sandbox.zenodo.org/record/1171298).
 
@@ -64,20 +68,20 @@ python3 scripts/generate_annotation.py
 ### Parameters
 
 ```
-usage: generate_annotation.py [-h] [-c] [-p] [threshold] [cutoff]
+usage: generate_annotation.py [-h] [-c] [-p {mbart,bart-paraphrase,pegasus}] [-s SEED] [threshold] [cutoff]
 
-Generate text and json files in the annotation folder to be used as training
-sets.
+Generate text and json files in the annotation folder to be used as training sets.
 
 positional arguments:
-  threshold         The threshold for the length of the descriptive texts.
-  cutoff            Select the descriptive texts where the cosine similarity
-                    is below the threshold.
+  threshold             The threshold for the length of the descriptive texts.
+  cutoff                Select the descriptive texts where the cosine similarity is below the threshold.
 
 options:
-  -h, --help        show this help message and exit
-  -c, --clear       Clear the annotation.
-  -p, --paraphrase  Paraphrase the annotation.
+  -h, --help            show this help message and exit
+  -c, --clear           Clear the annotation.
+  -p {mbart,bart-paraphrase,pegasus}, --paraphrase {mbart,bart-paraphrase,pegasus}
+                        Paraphrase the annotation.
+  -s SEED, --seed SEED  Set the seed for reproducibility in paraphrase.
 ```
 
 Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `Entity Annotator` to annotate and edit json files by typing the following command :
@@ -96,31 +100,30 @@ python3 scripts/generate_annotation.py -d
 
 Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way.
 
-## Create a MDNER
-
-To create the `mdner`, the `-c` and `-t` options must be used. The `-c` option tells the script to create a model. The `-t` option is the hyperparameters to be used to train the model.
+## 🛠 Create a MDNER
 
 ### Parameters
 
 ```
-usage: mdner.py [-h] [-p | -c] [-t d f p r] [-n NAME] [-g]
+usage: mdner.py [-h] [-c] [-t d f p r] [-n NAME] [-g] [-p] [-m] [-s SEED]
 
-Create or call a model for the molecular dynamics data.
+Create a model for the molecular dynamics data.
 
 options:
   -h, --help            show this help message and exit
-  -p, --predict         Call an existing model and extracts the MD information
-                        which can be viewed via HTML file.
-  -c, --create          Create a dedicated Named Entity Recognition model for
-                        our molecular dynamics data.
+  -c, --create          Create a dedicated Named Entity Recognition model for our molecular dynamics data.
   -t d f p r, --train d f p r
-                        Hyperparameters for the training process where d is
-                        the percentage of dropout. The f, p and r scores
-                        define what SpaCy believes to be the best model after
-                        the training process.
+                        Hyperparameters for the training process where d is the percentage of dropout. The f, p and r scores define what SpaCy believes to be the best model after the training process.
   -n NAME, --name NAME  Name of the model.
   -g, --gpu             Use GPU for training.
+  -p, --paraphrase      Add paraphrase in the training dataset.
+  -m, --mol             Use only MOL entities.
+  -s SEED, --seed SEED  Set the seed for reproducibility.
 ```
+
+To create the `mdner`, the `-c`, `-t` and `-n` options must be used. The `-c` option tells the script to create a model. The `-t` option is the hyperparameters to be used to train the model. The `-n` option corresponds to the name model that will be created.
+
+You can introduce paraphrases only in the training set with the `-p` option.
 
 ### Example
 
@@ -130,12 +133,13 @@ python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1 -n my_model -g
 
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be hidden). The three other values correspond to the metrics. They allow us to consider what is the best model. Here, for example, we prefer the precision score rather than the recall score.
 
-## Evaluate the MDNER
+## 🚦 Try MDNER
 
-Evaluate the `mdner` :
+In order to run an exemple, you can launch a streamlit site to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
 
 ```
-python3 scripts/mdner.py -p
+streamlit run scripts/st_mdner.py -- --model my_model
 ```
+## 📈 Results
 
-After creating the model, a html file will be create in the `results/outputs/` folder.
+
