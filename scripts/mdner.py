@@ -18,8 +18,7 @@ from datetime import datetime
 
 
 parser = argparse.ArgumentParser(
-    usage="mdner.py [-h] [-c -t d f p r -n NAME -g -p -m -s SEED]",
-    description="Create or call a model for the molecular dynamics data.",
+    description="Create a model for the molecular dynamics data.",
 )
 parser.add_argument(
     "-c",
