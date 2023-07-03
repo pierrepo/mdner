@@ -9,8 +9,8 @@ MDNER is a NER model developed specifically to extract information from MD simul
 [![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
-![Black](https://img.shields.io/badge/code%20style-black-black)
-![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)
+[![Black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
+[![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)](https://github.com/pierrepo/mdner)
 
 ## 🔧 Prerequisites
 
