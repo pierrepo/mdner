@@ -149,9 +149,6 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 <figure class="table" align="center">
 <figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
 <style type="text/css">
-td {
-  text-align:center !important;
-}
 th {
   text-align:center !important;
 }
@@ -167,37 +164,37 @@ th {
   <tr>
     <td></td>
     <td align="center">Transformers</td>
-    <td>Transformers + Paraphrase</td>
+    <td align="center">Transformers + Paraphrase</td>
   </tr>
   <tr style="font-weight: bold;">
-    <td>MOL (molecule)</td>
+    <td align="center">MOL (molecule)</td>
     <td align="center">75 ± 1.3</td>
-    <td>84 ± 1.4</td>
+    <td align="center">84 ± 1.4</td>
   </tr>
   <tr>
-    <td>FFM (force field &amp; model)</td>
-    <td>86 ± 2.1</td>
-    <td>90 ± 1.6</td>
+    <td align="center">FFM (force field &amp; model)</td>
+    <td align="center">86 ± 2.1</td>
+    <td align="center">90 ± 1.6</td>
   </tr>
   <tr>
-    <td>TEMP (temperature)</td>
-    <td>90 ± 2.1</td>
-    <td>91 ± 1.9</td>
+    <td align="center">TEMP (temperature)</td>
+    <td align="center">90 ± 2.1</td>
+    <td align="center">91 ± 1.9</td>
   </tr>
   <tr>
-    <td>STIME (simulation time)</td>
-    <td>71 ± 6.3</td>
-    <td>73 ± 8.2</td>
+    <td align="center">STIME (simulation time)</td>
+    <td align="center">71 ± 6.3</td>
+    <td align="center">73 ± 8.2</td>
   </tr>
   <tr>
-    <td>SOFT (software)</td>
-    <td>77 ± 1.5</td>
-    <td>66 ± 5.3</td>
+    <td align="center">SOFT (software)</td>
+    <td align="center">77 ± 1.5</td>
+    <td align="center">66 ± 5.3</td>
   </tr>
   <tr>
-    <td>Total</td>
-    <td>75 ± 0.7</td>
-    <td>82 ± 1.4</td>
+    <td align="center">Total</td>
+    <td align="center">75 ± 0.7</td>
+    <td align="center">82 ± 1.4</td>
   </tr>
 </tbody>
 </table>
