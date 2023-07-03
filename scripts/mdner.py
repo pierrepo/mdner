@@ -44,7 +44,7 @@ parser.add_argument(
 )
 parser.add_argument("-m", "--mol", help="Use only MOL entities.", action="store_true")
 parser.add_argument(
-    "-s", "--seed", help="Set the seed for reproducibility.", type=int, default=42
+    "-s", "--seed", help="Seed used to sample data sets for reproducibility.", type=int, default=42
 )
 args = parser.parse_args()
 random.seed(args.seed)

@@ -22,7 +22,7 @@ from datetime import datetime
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
 )
-parser.add_argument("-c", "--clear", help="Clear the annotation.", action="store_true")
+parser.add_argument("-c", "--clear", help="Clear the annotation folder.", action="store_true")
 parser.add_argument(
     "threshold",
     help="The threshold for the length of the descriptive texts.",
@@ -38,7 +38,7 @@ parser.add_argument(
 parser.add_argument(
     "-p",
     "--paraphrase",
-    help="Paraphrase the annotation.",
+    help="Paraphrase the annotation according to three paraphrasing models.",
     choices=["mbart", "bart-paraphrase", "pegasus"],
 )
 parser.add_argument(
