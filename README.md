@@ -136,13 +136,6 @@ python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1 -n my_model -g
 
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu.
 
-## 📋 Try MDNER
-
-In order to run an exemple, you can launch a streamlit site to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
-
-```
-streamlit run scripts/MDner.py -- --model my_model
-```
 ## 📈 Results
 From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1.
 
@@ -197,4 +190,12 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 
 We note an increase in the accuracy score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
 The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models.
+
+## 📋 Try MDNER
+
+In order to run an exemple, you can launch a streamlit site to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
+
+```
+streamlit run scripts/MDner.py -- --model my_model
+```
 
