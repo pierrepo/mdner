@@ -170,7 +170,7 @@ tr {
   </tr>
 </thead>
 <tbody>
-  <tr>
+  <tr align="center">
     <td></td>
     <td>Transformers</td>
     <td>Transformers + Paraphrase</td>
