@@ -116,12 +116,12 @@ options:
   -c, --create          Create a dedicated Named Entity Recognition model for our molecular
                         dynamics data.
   -t d f p r, --train d f p r
-                        Hyperparameters for the training process where d is the percentage
+                        Hyperparameters for the learning process where d is the percentage
                         of dropout. The f, p and r scores define what SpaCy believes to be
-                        the best model after the training process.
+                        the best model after the learning process.
   -n NAME, --name NAME  Name of the model.
-  -g, --gpu             Use GPU for training.
-  -p, --paraphrase      Add paraphrase in the training dataset.
+  -g, --gpu             Use GPU for learning.
+  -p, --paraphrase      Add paraphrase in the learning dataset.
   -m, --mol             Use only MOL entities.
   -s SEED, --seed SEED  Seed used to sample data sets for reproducibility.
 ```
