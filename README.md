@@ -142,8 +142,8 @@ streamlit run scripts/st_mdner.py -- --model my_model
 ```
 ## 📈 Results
 From the original and paraphrased texts obtained with the mBART model, we have trained an two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the model on the validation set as showed in the Table 1.
-<figure class="table">
 <center>
+<figure class="table">
 <figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
 <table>
 <thead>
@@ -190,8 +190,8 @@ From the original and paraphrased texts obtained with the mBART model, we have t
   </tr>
 </tbody>
 </table>
-</center>
 </figure>
+</center>
 We note an increase in the accuracy score, particularly for the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
 The NER models were able to identify molecule names not present in the training dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models.
 
