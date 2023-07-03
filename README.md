@@ -158,6 +158,9 @@ td {
 th {
   text-align:center !important;
 }
+tr {
+  text-align:center !important;
+}
 </style>
 <table align="center">
 <thead>
@@ -177,7 +180,7 @@ th {
     <td>75 ± 1.3</td>
     <td>84 ± 1.4</td>
   </tr>
-  <tr align="center">
+  <tr>
     <td>FFM (force field &amp; model)</td>
     <td>86 ± 2.1</td>
     <td>90 ± 1.6</td>
