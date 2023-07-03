@@ -95,10 +95,10 @@ There are various other tools for annotating such as [Prodigy](https://prodi.gy/
 If you think you don't have enough data, you can duplicate the annotated texts with the following command:
 
 ```
-python3 scripts/generate_annotation.py -d
+python3 scripts/generate_annotation.py -p mbart
 ```
 
-Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way.
+Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing.
 
 ## 🛠 Create a MDNER
 
@@ -123,7 +123,7 @@ options:
 
 To create the `mdner`, the `-c`, `-t` and `-n` options must be used. The `-c` option tells the script to create a model. The `-t` option is the hyperparameters to be used to train the model. The `-n` option corresponds to the name model that will be created.
 
-You can introduce paraphrases only in the training set with the `-p` option.
+You can introduce paraphrases only in the learning set (training + test) with the `-p` option.
 
 ### Example
 
@@ -131,9 +131,9 @@ You can introduce paraphrases only in the training set with the `-p` option.
 python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1 -n my_model -g
 ```
 
-Here, we define a model where the dropout will be 0.4 (40% of the nodes will be hidden). The three other values correspond to the metrics. They allow us to consider what is the best model. Here, for example, we prefer the precision score rather than the recall score.
+Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu.
 
-## 🚦 Try MDNER
+## 📋 Try MDNER
 
 In order to run an exemple, you can launch a streamlit site to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
 
@@ -141,5 +141,57 @@ In order to run an exemple, you can launch a streamlit site to apply the MDNER m
 streamlit run scripts/st_mdner.py -- --model my_model
 ```
 ## 📈 Results
-
+From the original and paraphrased texts obtained with the mBART model, we have trained an two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the model on the validation set as showed in the Table 1.
+<figure class="table">
+<center>
+<figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
+<table>
+<thead>
+  <tr>
+    <th style="text-align:center !important">Entities<br></th>
+    <th colspan="2" style="text-align:center !important">Precision score (%)<br></th>
+  </tr>
+</thead>
+<tbody>
+  <tr style="text-align:center !important">
+    <td></td>
+    <td>Transformers</td>
+    <td>Transformers + Paraphrase</td>
+  </tr>
+  <tr style="text-align:center !important; font-weight: bold;">
+    <td>MOL (molecule)</td>
+    <td>75 ± 1.3</td>
+    <td>84 ± 1.4</td>
+  </tr>
+  <tr style="text-align:center !important">
+    <td>FFM (force field &amp; model)</td>
+    <td>86 ± 2.1</td>
+    <td>90 ± 1.6</td>
+  </tr>
+  <tr style="text-align:center !important">
+    <td>TEMP (temperature)</td>
+    <td>90 ± 2.1</td>
+    <td>91 ± 1.9</td>
+  </tr>
+  <tr style="text-align:center !important">
+    <td>STIME (simulation time)</td>
+    <td>71 ± 6.3</td>
+    <td>73 ± 8.2</td>
+  </tr>
+  <tr style="text-align:center !important">
+    <td>SOFT (software)</td>
+    <td>77 ± 1.5</td>
+    <td>66 ± 5.3</td>
+  </tr>
+  <tr style="text-align:center !important">
+    <td>Total</td>
+    <td>75 ± 0.7</td>
+    <td>82 ± 1.4</td>
+  </tr>
+</tbody>
+</table>
+</center>
+</figure>
+We note an increase in the accuracy score, particularly for the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
+The NER models were able to identify molecule names not present in the training dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models.
 
