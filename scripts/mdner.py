@@ -29,17 +29,17 @@ parser.add_argument(
 parser.add_argument(
     "-t",
     "--train",
-    help="Hyperparameters for the training process where d is the percentage of dropout. The f, p and r scores define what SpaCy believes to be the best model after the training process.",
+    help="Hyperparameters for the learning process where d is the percentage of dropout. The f, p and r scores define what SpaCy believes to be the best model after the learning process.",
     nargs=4,
     type=float,
     metavar=("d", "f", "p", "r"),
 )
 parser.add_argument("-n", "--name", help="Name of the model.", type=str)
-parser.add_argument("-g", "--gpu", help="Use GPU for training.", action="store_true")
+parser.add_argument("-g", "--gpu", help="Use GPU for learning.", action="store_true")
 parser.add_argument(
     "-p",
     "--paraphrase",
-    help="Add paraphrase in the training dataset.",
+    help="Add paraphrase in the learning dataset.",
     action="store_true",
 )
 parser.add_argument("-m", "--mol", help="Use only MOL entities.", action="store_true")
