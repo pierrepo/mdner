@@ -10,12 +10,13 @@ MDNER is a NER model developed specifically to extract information from MD simul
 [![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
 ![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)
+![Black](https://img.shields.io/badge/code%20style-black-black)
 
 ## 🔧 Prerequisites
 
 ### Hardware
 
-For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage/spacy-101).
+For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage).
 
 ## 📦 Setup your environment
 
@@ -102,6 +103,8 @@ Duplication consists of paraphrasing, i.e. keeping the context of the original t
 
 ## 🛠 Create a MDNER
 
+The `mdner.py` script is used to create the model according to the defined parameters.
+
 ### Parameters
 
 ```
@@ -138,16 +141,14 @@ Here, we define a model where the dropout will be 0.4 (40% of the nodes will be 
 In order to run an exemple, you can launch a streamlit site to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
 
 ```
-streamlit run scripts/st_mdner.py -- --model my_model
+streamlit run scripts/MDner.py -- --model my_model
 ```
 ## 📈 Results
 From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1.
 
-<center>
-
-<figure class="table">
+<figure class="table" align="center">
 <figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
-<table>
+<table align="center">
 <thead>
   <tr>
     <th style="text-align:center !important">Entities<br></th>
@@ -193,8 +194,6 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 </tbody>
 </table>
 </figure>
-
-</center>
 
 We note an increase in the accuracy score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
 The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models.
