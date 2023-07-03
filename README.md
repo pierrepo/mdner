@@ -148,11 +148,6 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 
 <figure class="table" align="center">
 <figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
-<style type="text/css">
-th {
-  text-align:center !important;
-}
-</style>
 <table align="center">
 <thead>
   <tr>
