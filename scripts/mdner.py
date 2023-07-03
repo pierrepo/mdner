@@ -103,7 +103,7 @@ def add_paraphrase_in_data(
     sample_eval_paraphrase : list
         List of the paraphrase files used for the evaluation.
     add_paraphrase : bool
-        If True, add paraphrase in the training dataset.
+        If True, add paraphrase in the learning dataset.
 
     Returns
     -------
@@ -222,7 +222,7 @@ def create_data(add_paraphrase: bool, only_mol: bool) -> list:
     Parameters:
     -----------
     add_paraphrase: bool
-        If True, add paraphrase in the training dataset.
+        If True, add paraphrase in the learning dataset.
     only_mol: bool
         If True, use only MOL entities.
 
@@ -379,7 +379,7 @@ def generate_data(name_model: str, add_paraphrase: bool, only_mol: bool, seed: i
     name_model: str
         Name of the model to use.
     add_paraphrase: bool
-        If True, the paraphrase data will be added to the train data.
+        If True, the paraphrase data will be added to the learning data.
     only_mol: bool
         If True, only the molecules will be extracted from the data.
     """
