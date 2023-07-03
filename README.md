@@ -9,8 +9,8 @@ MDNER is a NER model developed specifically to extract information from MD simul
 [![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
-![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)
 ![Black](https://img.shields.io/badge/code%20style-black-black)
+![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)
 
 ## 🔧 Prerequisites
 
@@ -148,6 +148,17 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 
 <figure class="table" align="center">
 <figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
+<style type="text/css">
+table {
+  text-aligne:center !important;
+}
+td {
+  text-aligne:center !important;
+}
+th {
+  text-aligne:center !important;
+}
+</style>
 <table align="center">
 <thead>
   <tr>
@@ -156,37 +167,37 @@ From the original and paraphrased texts obtained with the mBART model, we have t
   </tr>
 </thead>
 <tbody>
-  <tr style="text-align:center !important">
+  <tr>
     <td></td>
     <td>Transformers</td>
     <td>Transformers + Paraphrase</td>
   </tr>
-  <tr style="text-align:center !important; font-weight: bold;">
+  <tr style="font-weight: bold;">
     <td>MOL (molecule)</td>
     <td>75 ± 1.3</td>
     <td>84 ± 1.4</td>
   </tr>
-  <tr style="text-align:center !important">
+  <tr>
     <td>FFM (force field &amp; model)</td>
     <td>86 ± 2.1</td>
     <td>90 ± 1.6</td>
   </tr>
-  <tr style="text-align:center !important">
+  <tr>
     <td>TEMP (temperature)</td>
     <td>90 ± 2.1</td>
     <td>91 ± 1.9</td>
   </tr>
-  <tr style="text-align:center !important">
+  <tr>
     <td>STIME (simulation time)</td>
     <td>71 ± 6.3</td>
     <td>73 ± 8.2</td>
   </tr>
-  <tr style="text-align:center !important">
+  <tr>
     <td>SOFT (software)</td>
     <td>77 ± 1.5</td>
     <td>66 ± 5.3</td>
   </tr>
-  <tr style="text-align:center !important">
+  <tr>
     <td>Total</td>
     <td>75 ± 0.7</td>
     <td>82 ± 1.4</td>
