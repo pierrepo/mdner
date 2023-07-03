@@ -4,8 +4,6 @@
 
 MDNER is a NER model developed specifically to extract information from MD simulations. It is used to identify the names of the molecules simulated, the simulation time, the force field or molecular model used, the simulation temperature and the name of the software used to run the simulations. This is the minimum information required to describe a MD simulation. 
 
-
-
 [![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
@@ -79,9 +77,9 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -c, --clear           Clear the annotation.
+  -c, --clear           Clear the annotation folder.
   -p {mbart,bart-paraphrase,pegasus}, --paraphrase {mbart,bart-paraphrase,pegasus}
-                        Paraphrase the annotation.
+                        Paraphrase the annotation according to three paraphrasing models.
   -s SEED, --seed SEED  Set the seed for reproducibility in paraphrase.
 ```
 
@@ -114,14 +112,17 @@ Create a model for the molecular dynamics data.
 
 options:
   -h, --help            show this help message and exit
-  -c, --create          Create a dedicated Named Entity Recognition model for our molecular dynamics data.
+  -c, --create          Create a dedicated Named Entity Recognition model for our molecular
+                        dynamics data.
   -t d f p r, --train d f p r
-                        Hyperparameters for the training process where d is the percentage of dropout. The f, p and r scores define what SpaCy believes to be the best model after the training process.
+                        Hyperparameters for the training process where d is the percentage
+                        of dropout. The f, p and r scores define what SpaCy believes to be
+                        the best model after the training process.
   -n NAME, --name NAME  Name of the model.
   -g, --gpu             Use GPU for training.
   -p, --paraphrase      Add paraphrase in the training dataset.
   -m, --mol             Use only MOL entities.
-  -s SEED, --seed SEED  Set the seed for reproducibility.
+  -s SEED, --seed SEED  Seed used to sample data sets for reproducibility.
 ```
 
 To create the `mdner`, the `-c`, `-t` and `-n` options must be used. The `-c` option tells the script to create a model. The `-t` option is the hyperparameters to be used to train the model. The `-n` option corresponds to the name model that will be created.
@@ -189,13 +190,19 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 </figure>
 
 We note an increase in the accuracy score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
-The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models.
+The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[1]](#1).
 
 ## 📋 Try MDNER
 
-In order to run an exemple, you can launch a streamlit site to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
+In order to run an exemple, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
 
 ```
 streamlit run scripts/MDner.py -- --model my_model
 ```
+
+Using MDNER does not require a GPU. It may be advantageous to use a GPU to speed up the predictions of the NER model, but it is not mandatory.
+
+## References
+<a id="1">[1]</a> 
+Suchin Gururangan, Ana Marasović, Swabha Swayamdipta, Kyle Lo, Iz Beltagy, Doug Downey, and Noah A. Smith. 2020. Don’t Stop Pretraining: Adapt Language Models to Domains and Tasks. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, pages 8342–8360, Online. Association for Computational Linguistics.
 
