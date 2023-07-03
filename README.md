@@ -73,7 +73,8 @@ Generate text and json files in the annotation folder to be used as training set
 
 positional arguments:
   threshold             The threshold for the length of the descriptive texts.
-  cutoff                Select the descriptive texts where the cosine similarity is below the threshold.
+  cutoff                Select the descriptive texts where the cosine similarity is below
+                        the threshold.
 
 options:
   -h, --help            show this help message and exit
