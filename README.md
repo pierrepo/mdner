@@ -177,7 +177,7 @@ th {
     <td>75 ± 1.3</td>
     <td>84 ± 1.4</td>
   </tr>
-  <tr>
+  <tr align="center">
     <td>FFM (force field &amp; model)</td>
     <td>86 ± 2.1</td>
     <td>90 ± 1.6</td>
