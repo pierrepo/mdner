@@ -9,6 +9,8 @@ channels:
 dependencies:
   - python=3.10
   - pip
+  - setuptools
+  - wheel
   - jupyterlab=3
   - pyyaml
   # linters and more
@@ -19,18 +21,15 @@ dependencies:
   # Parquet tools
   - parquet-tools
   - pip:
-      - cupy
-      - spacy[cuda-autodetect]
-      - watermark
-      - spacy-transformers
-      - tqdm
-      - matplotlib
-      - spicy
-      - seaborn
-      - scikit-learn
-      - streamlit
-      - GPUtil
-      - numba
+      - cupy-cuda12x
+      - spacy[cuda12x,transformers,lookups]
       - transformers
       - sentencepiece
+      - scikit-learn
       - torch
+      - watermark
+      - tqdm
+      - matplotlib
+      - seaborn
+      - streamlit
+      - numba
