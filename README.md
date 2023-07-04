@@ -14,7 +14,7 @@ MDNER is a NER model developed specifically to extract information from MD simul
 
 ### Hardware
 
-For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage).
+For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. SpaCy is compatible with CUDA 12.x. This means that a CUDA 12.x environment must be configured on your system, with the necessary CUDA drivers and libraries. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage).
 
 ## 📦 Setup your environment
 
