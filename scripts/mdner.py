@@ -435,7 +435,7 @@ def create_config(option_gpu: bool):
             command = "python -m spacy init config results/outputs/config.cfg --lang en --pipeline transformer,ner --optimize accuracy -G --force"
             display_command(command, display=False)
         else:
-            exit(1)
+            raise Exception("No GPU detected")
     else:
         # Create the config file
         command = "python -m spacy init config results/outputs/config.cfg --lang en --pipeline ner --optimize accuracy --force"
