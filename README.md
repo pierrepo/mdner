@@ -1,8 +1,8 @@
-# Molecular dynamics named entity recognition
+# 📑 Molecular dynamics named entity recognition 🧬
 
 **A Named Entity Recognition model for molecular dynamics data.**
 
-MDNER is a NER model developed specifically to extract information from MD simulations. It is used to identify the names of the molecules simulated, the simulation time, the force field or molecular model used, the simulation temperature and the name of the software used to run the simulations. This is the minimum information required to describe a MD simulation. 
+MDNER is a NER model developed specifically to extract information from MD simulations.
 
 [![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
@@ -10,7 +10,7 @@ MDNER is a NER model developed specifically to extract information from MD simul
 [![Black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
 [![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)](https://github.com/pierrepo/mdner)
 
-## 🔧 Prerequisites
+## ⚙️ Prerequisites
 
 ### Hardware
 
@@ -18,27 +18,17 @@ For the GPU code, it's essential to have a relatively new Nvidia GPU that has a 
 
 ## 📦 Setup your environment
 
-Clone the repository :
+Clone the repository and install [mamba](https://github.com/mamba-org/mamba) :
 
 ```bash
 git clone https://github.com/pierrepo/mdner.git
-```
-
-Install [mamba](https://github.com/mamba-org/mamba) :
-
-```bash
 conda install mamba -n base -c conda-forge
 ```
 
-Create the `mdner` conda environment :
+Create the `mdner` conda environment and load it :
 
 ```
 mamba env create -f binder/environment.yml
-```
-
-Load the `mdner` conda environment :
-
-```
 conda activate mdner
 ```
 
@@ -100,7 +90,7 @@ python3 scripts/generate_annotation.py -p mbart
 
 Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing.
 
-## 🛠 Create a MDNER
+## 📑 Create MDNER
 
 The `mdner.py` script is used to create the model according to the defined parameters.
 
@@ -193,7 +183,7 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
 The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[1]](#1).
 
-## 📋 Try MDNER
+## 🚀 Try MDNER
 
 In order to run an exemple, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
 
