@@ -34,3 +34,5 @@ dependencies:
       - streamlit
       - numba
       - protobuf==3.20.*
+      - sentence-transformers
+      - language_tool_python
