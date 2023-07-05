@@ -159,38 +159,38 @@ From the original and paraphrased texts obtained with the mBART model, we have t
   <tr style="font-weight: bold;">
     <td align="center">MOL (molecule)</td>
     <td align="center">75 ± 1.3</td>
-    <td align="center">84 ± 1.4</td>
+    <td align="center"><b>84 ± 1.4</b></td>
   </tr>
   <tr>
     <td align="center">FFM (force field &amp; model)</td>
     <td align="center">86 ± 2.1</td>
-    <td align="center">90 ± 1.6</td>
+    <td align="center"><b>90 ± 1.6</b></td>
   </tr>
   <tr>
     <td align="center">TEMP (temperature)</td>
     <td align="center">90 ± 2.1</td>
-    <td align="center">91 ± 1.9</td>
+    <td align="center"><b>91 ± 1.9</b></td>
   </tr>
   <tr>
     <td align="center">STIME (simulation time)</td>
     <td align="center">71 ± 6.3</td>
-    <td align="center">73 ± 8.2</td>
+    <td align="center"><b>73 ± 8.2</b></td>
   </tr>
   <tr>
     <td align="center">SOFT (software)</td>
-    <td align="center">77 ± 1.5</td>
+    <td align="center"><b>77 ± 1.5</b></td>
     <td align="center">66 ± 5.3</td>
   </tr>
   <tr>
     <td align="center">Total</td>
     <td align="center">75 ± 0.7</td>
-    <td align="center">82 ± 1.4</td>
+    <td align="center"><b>82 ± 1.4</b></td>
   </tr>
 </tbody>
 </table>
 </figure>
 
-We note an increase in the accuracy score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
+We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
 The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[1]](#1).
 
 ## 📋 Try MDNER
