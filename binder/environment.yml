@@ -13,6 +13,7 @@ dependencies:
   - wheel
   - jupyterlab=3
   - pyyaml
+  - conda-forge::cupy
   # linters and more
   - pylint
   - pycodestyle
@@ -21,7 +22,6 @@ dependencies:
   # Parquet tools
   - parquet-tools
   - pip:
-      - cupy-cuda12x
       - spacy[cuda12x,transformers,lookups]
       - transformers
       - sentencepiece
