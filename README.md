@@ -117,7 +117,8 @@ options:
   -g, --gpu             Use GPU for learning.
   -p, --paraphrase      Add paraphrase in the learning dataset.
   -m, --mol             Use only MOL entities.
-  -s SEED, --seed SEED  Seed used to sample data sets for reproducibility.
+  -s SEED, --seed SEED  Seed used to sample data sets for reproducibility. By default the
+                        value is 42.
 ```
 
 To create the `mdner`, the `-c`, `-t` and `-n` options must be used. The `-c` option tells the script to create a model. The `-t` option is the hyperparameters to be used to train the model. The `-n` option corresponds to the name model that will be created.
