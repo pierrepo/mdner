@@ -29,7 +29,7 @@ parser.add_argument(
 parser.add_argument(
     "-t",
     "--train",
-    help="Hyperparameters for the learning process where d is the percentage of dropout. The f, p and r scores define what SpaCy believes to be the best model after the learning process.",
+    help="Hyperparameters for the learning process where d is the percentage of dropout. The f, p and r scores define what SpaCy believes to be the best model after the learning process. Each value must be between 0 and 1, and the sum of these three values must be equal to 1.",
     nargs=4,
     type=float,
     metavar=("d", "f", "p", "r"),
