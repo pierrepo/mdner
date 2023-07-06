@@ -111,7 +111,8 @@ options:
   -t d f p r, --train d f p r
                         Hyperparameters for the learning process where d is the percentage
                         of dropout. The f, p and r scores define what SpaCy believes to be
-                        the best model after the learning process.
+                        the best model after the learning process. Each value must be between
+                        0 and 1, and the sum of these three values must be equal to 1.
   -n NAME, --name NAME  Name of the model.
   -g, --gpu             Use GPU for learning.
   -p, --paraphrase      Add paraphrase in the learning dataset.
