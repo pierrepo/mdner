@@ -1,6 +1,6 @@
 # ANNOTATIONS
 
-## Jeux de données
+## Data sets
 
 The MDverse project aims to make MD data accessible and searchable. By browsing the generalist data repositories Zenodo, Figshare and Open Science Framework (OSF), we have indexed around 250,000 files in almost 2,000 datasets. The table below illustrates the distribution of the data.
 
