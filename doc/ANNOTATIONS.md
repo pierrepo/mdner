@@ -44,18 +44,33 @@ Each JSON file is structured as a dictionary that includes a list of entities an
    ],
    "annotations":[
       [
-         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam vel lectus justo.",
+         "POPC bilayer with 30 waters per lipid (17+17), at 300K, simulation using gromacs.",
          {
             "entities":[
                [
                   0,
-                  25,
+                  4,
                   "MOL"
                ],
                [
-                  56,
-                  67,
+                  21,
+                  27,
                   "MOL"
+               ],
+               [
+                  32,
+                  37,
+                  "MOL"
+               ],
+               [
+                  50,
+                  54,
+                  "TEMP"
+               ],
+               [
+                  73,
+                  80,
+                  "SOFT"
                ]
             ]
          }
