@@ -63,13 +63,14 @@ usage: generate_annotation.py [-h] [-c] [-p {mbart,bart-paraphrase,pegasus}] [-s
 Generate text and json files in the annotation folder to be used as training sets.
 
 positional arguments:
-  threshold             The threshold for the length of the descriptive texts.
+  threshold             The threshold for the length of the descriptive texts. By default
+                        the value is 594.
   cutoff                Select the descriptive texts where the cosine similarity is below
-                        the threshold.
+                        the threshold. By default the value is 0.2.
 
 options:
   -h, --help            show this help message and exit
-  -c, --clear           Clear the annotation folder.
+  -c, --clear           Clear the annotation folder and generate files.
   -p {mbart,bart-paraphrase,pegasus}, --paraphrase {mbart,bart-paraphrase,pegasus}
                         Paraphrase the annotation according to three paraphrasing models.
   -s SEED, --seed SEED  Set the seed for reproducibility in paraphrase. By default the
@@ -137,7 +138,7 @@ Here, we define a model where the dropout will be 0.4 (40% of the nodes will be 
 At the end of the code execution, the best NER model will be evaluated on the validation set.
 
 ## 📈 Results
-From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1.
+From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522.
 
 <figure class="table" align="center">
 <figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
@@ -191,9 +192,10 @@ From the original and paraphrased texts obtained with the mBART model, we have t
 We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
 The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[1]](#1).
 
-## 🚀 Try MDNER
 
-In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
+## 🚀 Use MDNER
+
+In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it. Simply enter the name of the model as an argument, as in the following command :
 
 ```
 streamlit run scripts/MDner.py -- --model my_model
