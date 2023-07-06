@@ -22,16 +22,18 @@ from datetime import datetime
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
 )
-parser.add_argument("-c", "--clear", help="Clear the annotation folder.", action="store_true")
+parser.add_argument(
+    "-c", "--clear", help="Clear the annotation folder and generate files.", action="store_true"
+)
 parser.add_argument(
     "threshold",
-    help="The threshold for the length of the descriptive texts.",
+    help="The threshold for the length of the descriptive texts. By default the value is 594.",
     nargs="?",
     default=594,
 )
 parser.add_argument(
     "cutoff",
-    help="Select the descriptive texts where the cosine similarity is below the threshold.",
+    help="Select the descriptive texts where the cosine similarity is below the threshold. By default the value is 0.2.",
     nargs="?",
     default=0.2,
 )

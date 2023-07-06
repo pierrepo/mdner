@@ -119,7 +119,7 @@ def add_paraphrase_in_data(
         file for file in paraphrase_files if file not in sample_eval_paraphrase
     ]
     if add_paraphrase:
-        logging.info("Add paraphrase in the training dataset")
+        logging.info("Add paraphrase in the learning dataset")
         learn_files = references_files + paraphrase_files
     else:
         learn_files = references_files
@@ -274,12 +274,12 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
     # Create a DocBin object will be used to create a .spacy file
     db = DocBin()
     # Config the tqdm bar to display the progress
-    description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO]"
+    description = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]}] [INFO] {name_file}"
     annotations = tqdm(
         data["annotations"],
         desc=description,
         total=len(data["annotations"]),
-        bar_format="{l_bar} Size: " + str(len(data["annotations"])),
+        bar_format=" {l_bar} Size: " + str(len(data["annotations"])),
     )
     # Read each annotation and check if the entity is a valid entity
     for text, annot in annotations:
