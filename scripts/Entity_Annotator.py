@@ -67,7 +67,7 @@ def display_perc_all_entities():
     total = 0
     with st.sidebar.expander("Percentage of entities in the data folder :"):
         for json_name in glob.glob(path + "*.json"):
-            with open(path + json_name, "r") as json_file:
+            with open(json_name, "r") as json_file:
                 annotations = json.load(json_file)["annotations"][0][1]
                 for _, _, label in annotations["entities"]:
                     ents_dict[label] += 1
