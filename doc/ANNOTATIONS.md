@@ -5,7 +5,6 @@
 The MDverse project aims to make MD data accessible and searchable. By browsing the generalist data repositories Zenodo, Figshare and Open Science Framework (OSF), we have indexed around 250,000 files in almost 2,000 datasets. The table below illustrates the distribution of the data.
 
 <figure class="table" align="center">
-<figcaption align="center"> Table 1 - Distribution of indexed data by data repositories.</figcaption>
 <table align="center">
 <thead align="center">
   <tr>
