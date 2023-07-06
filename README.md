@@ -14,7 +14,8 @@ MDNER is a NER model developed specifically to extract information from MD simul
 
 ### Hardware
 
-For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB. SpaCy is compatible with CUDA 12.x. This means that a CUDA 12.x environment must be configured on your system, with the necessary CUDA drivers and libraries. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage).
+For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB.
+It should also be noted that you must have a CUDA driver installed on your system. The code uses CUDA, a parallel computing platform developed by NVIDIA, to interact with GPUs. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage).
 
 ## 📦 Setup your environment
 
@@ -90,6 +91,8 @@ python3 scripts/generate_annotation.py -p mbart
 
 Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing.
 
+A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/doc/ANNOTATIONS.md).
+
 ## 📑 Create MDNER
 
 The `mdner.py` script is used to create the model according to the defined parameters.
@@ -123,10 +126,12 @@ You can introduce paraphrases only in the learning set (training + test) with th
 ### Example
 
 ```
-python3 scripts/mdner.py -c -t 0.4 0.0 0.9 0.1 -n my_model -g
+python3 scripts/mdner.py -c -t 0.4 0.0 1.0 0.0 -n my_model -g
 ```
 
-Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu.
+Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model.
+
+At the end of the code execution, the best NER model will be evaluated on the validation set.
 
 ## 📈 Results
 From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1.
@@ -185,7 +190,7 @@ The NER models were able to identify molecule names not present in the learning 
 
 ## 🚀 Try MDNER
 
-In order to run an exemple, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
+In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it.  Simply enter the name of the model as an argument, as in the following command :
 
 ```
 streamlit run scripts/MDner.py -- --model my_model
