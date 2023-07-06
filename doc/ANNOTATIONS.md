@@ -53,23 +53,23 @@ Each JSON file is structured as a dictionary that includes a list of entities an
                   "MOL"
                ],
                [
-                  21,
-                  27,
+                  22,
+                  28,
                   "MOL"
                ],
                [
-                  32,
-                  37,
+                  34,
+                  39,
                   "MOL"
                ],
                [
-                  50,
-                  54,
+                  53,
+                  57,
                   "TEMP"
                ],
                [
-                  73,
-                  80,
+                  77,
+                  83,
                   "SOFT"
                ]
             ]
