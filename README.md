@@ -72,7 +72,8 @@ options:
   -c, --clear           Clear the annotation folder.
   -p {mbart,bart-paraphrase,pegasus}, --paraphrase {mbart,bart-paraphrase,pegasus}
                         Paraphrase the annotation according to three paraphrasing models.
-  -s SEED, --seed SEED  Set the seed for reproducibility in paraphrase.
+  -s SEED, --seed SEED  Set the seed for reproducibility in paraphrase. By default the
+                        value is 42.
 ```
 
 Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `Entity Annotator` to annotate and edit json files by typing the following command :
