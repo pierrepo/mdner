@@ -22,7 +22,7 @@ dependencies:
   # Parquet tools
   - parquet-tools
   - pip:
-      - spacy[cuda12x,transformers,lookups]
+      - spacy[transformers,lookups]
       - transformers
       - sentencepiece
       - scikit-learn
