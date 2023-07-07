@@ -60,8 +60,11 @@ Launch the generation of text files and json files :
 python3 scripts/generate_annotation.py
 ```
 ➤ Outputs :
-
-![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/output1.png)
+```bash
+[2023-07-07 17:43:56,748] [INFO] 974 texts selected according the threshold length
+[2023-07-07 17:43:59,457] [INFO] 284 texts selected according the corpus similarity
+[2023-07-07 17:43:59,545] [INFO] Generation completed
+```
 
 ### Parameters
 
@@ -138,12 +141,25 @@ You can introduce paraphrases only in the learning set (training + test) with th
 ### Example
 
 ```
-python3 scripts/mdner.py -c -t 0.4 0.0 1.0 0.0 -n my_model -g
+python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
+```
+➤ Outputs :
+
+```bash
+[2023-07-07 18:12:15,701] [INFO] Seed: 7522
+[2023-07-07 18:12:15,707] [INFO] Add paraphrase in the learning dataset
+[2023-07-07 18:12:15,746] [WARNING] 42 files ignored because there are not many entities
+[2023-07-07 18:12:16,221] [INFO] train_data: 100%| Size: 488
+[2023-07-07 18:12:17,718] [INFO] test_data: 100%| Size: 122
+[2023-07-07 18:12:18,277] [INFO] eval_data: 100%| Size: 34
+[2023-07-07 18:12:18,454] [INFO] Checking GPU availability
+[...]
+
 ```
 
-Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model.
+Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model. The `-p` is used to add paraphrases to the learning dataset.
 
-At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory.
+At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
 ## 📈 Results
 From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522.
