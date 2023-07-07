@@ -195,6 +195,8 @@ The NER models were able to identify molecule names not present in the learning 
 
 ## 🚀 Use MDNER
 
+![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/webapp.gif)
+
 In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it. Simply enter the name of the model as an argument, as in the following command :
 
 ```
