@@ -93,7 +93,7 @@ python3 scripts/generate_annotation.py -p mbart
 
 Duplication consists of paraphrasing, i.e. keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing.
 
-A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/doc/ANNOTATIONS.md).
+A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
 ## 📑 Create MDNER
 
