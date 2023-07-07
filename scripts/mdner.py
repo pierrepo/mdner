@@ -279,7 +279,7 @@ def create_spacy_object(data: dict, name_file: str, name_model: str):
         data["annotations"],
         desc=description,
         total=len(data["annotations"]),
-        bar_format=" {l_bar} Size: " + str(len(data["annotations"])),
+        bar_format="{l_bar} Size: " + str(len(data["annotations"])),
     )
     # Read each annotation and check if the entity is a valid entity
     for text, annot in annotations:
