@@ -224,7 +224,7 @@ The NER models were able to identify molecule names not present in the learning 
 In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it. Simply enter the name of the model as an argument, as in the following command :
 
 ```
-streamlit run scripts/MDner.py -- --model my_model
+streamlit run scripts/mdner_app.py -- --model my_model
 ```
 
 Using MDNER does not require a GPU. It may be advantageous to use a GPU to speed up the predictions of the NER model, but it is not mandatory.
