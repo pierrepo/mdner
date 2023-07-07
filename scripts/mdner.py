@@ -35,7 +35,7 @@ parser.add_argument(
     metavar=("d", "f", "p", "r"),
 )
 parser.add_argument("-n", "--name", help="Name of the model.", type=str)
-parser.add_argument("-g", "--gpu", help="Use GPU for learning.", action="store_true")
+parser.add_argument("-g", "--gpu", help="Use GPU for learning. Using this parameter, the model that will be created will be based on the Transfromers 'BioMed-RoBERTa-base'.", action="store_true")
 parser.add_argument(
     "-p",
     "--paraphrase",
