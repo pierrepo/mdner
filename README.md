@@ -155,7 +155,14 @@ python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
 [2023-07-07 18:12:18,277] [INFO] eval_data: 100%| Size: 34
 [2023-07-07 18:12:18,454] [INFO] Checking GPU availability
 [...]
+=============================== NER (per type) ===============================
 
+            P       R       F
+MOL     90.46   79.02   84.36
+FFM     95.45   89.36   92.31
+SOFT    89.36   89.36   89.36
+STIME   81.25   89.66   85.25
+TEMP    85.71   66.67   75.00
 ```
 
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model. The `-p` is used to add paraphrases to the learning dataset.
