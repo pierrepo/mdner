@@ -59,6 +59,7 @@ Launch the generation of text files and json files :
 ```
 python3 scripts/generate_annotation.py
 ```
+↳ ![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/output1.gif)
 
 ### Parameters
 
