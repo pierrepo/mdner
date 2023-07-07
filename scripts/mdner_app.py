@@ -25,8 +25,19 @@ def use_model(model):
     model : str
         Model name.
     """
-    st.set_page_config(page_title="MDner - Streamlit", layout="wide")
-    st.title("MDner - Streamlit")
+    st.set_page_config(page_title="MDNER", layout="wide")
+    streamlit_style = """
+		<style>
+			html, body {
+			    font-family: 'Roboto', sans-serif;
+			}
+		</style>
+	"""
+    st.markdown(streamlit_style, unsafe_allow_html=True)
+    st.markdown(
+        "<h1 style='text-align: center; color: purple;'>📑 MDNER 🧬</h1>",
+        unsafe_allow_html=True,
+    )
     text = st.text_area("Text to annotate", height=300)
     apply = st.button("Run")
     if apply:
