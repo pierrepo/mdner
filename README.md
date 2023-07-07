@@ -19,16 +19,21 @@ It should also be noted that you must have a CUDA driver installed on your syste
 
 ## 📦 Setup your environment
 
-Clone the repository and install [mamba](https://github.com/mamba-org/mamba) :
+Clone the repository and move to the new directory :
 
 ```bash
 git clone https://github.com/pierrepo/mdner.git
+cd mdner
+```
+Install [mamba](https://github.com/mamba-org/mamba) :
+
+```bash
 conda install mamba -n base -c conda-forge
 ```
 
 Create the `mdner` conda environment and load it :
 
-```
+```bash
 mamba env create -f binder/environment.yml
 conda activate mdner
 ```
