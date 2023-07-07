@@ -135,7 +135,7 @@ python3 scripts/mdner.py -c -t 0.4 0.0 1.0 0.0 -n my_model -g
 
 Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model.
 
-At the end of the code execution, the best NER model will be evaluated on the validation set.
+At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory.
 
 ## 📈 Results
 From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522.
