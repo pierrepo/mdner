@@ -34,6 +34,6 @@ dependencies:
       - numba
       - protobuf==3.20.*
       # For cosinus similarity analysis
-      - sentence-transformers
+      - sentence_transformers
       # For grammatical error analysis
       - language_tool_python
