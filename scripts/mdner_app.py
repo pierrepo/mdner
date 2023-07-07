@@ -35,7 +35,7 @@ def use_model(model):
 	"""
     st.markdown(streamlit_style, unsafe_allow_html=True)
     st.markdown(
-        "<h1 style='text-align: center; color: purple;'>📑 MDNER 🧬</h1>",
+        "<h1 style='text-align: center; color: dodgerBlue;'>📑 MDNER 🧬</h1>",
         unsafe_allow_html=True,
     )
     text = st.text_area("Text to annotate", height=300)
