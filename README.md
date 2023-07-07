@@ -127,7 +127,8 @@ options:
                         the best model after the learning process. Each value must be between
                         0 and 1, and the sum of these three values must be equal to 1.
   -n NAME, --name NAME  Name of the model.
-  -g, --gpu             Use GPU for learning.
+  -g, --gpu             Use GPU for learning. Using this parameter, the model that will be
+                        created will be based on the Transfromers "BioMed-RoBERTa-base".
   -p, --paraphrase      Add paraphrase in the learning dataset.
   -m, --mol             Use only MOL entities.
   -s SEED, --seed SEED  Seed used to sample data sets for reproducibility. By default the
