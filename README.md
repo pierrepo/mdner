@@ -2,7 +2,7 @@
 
 **A Named Entity Recognition model for molecular dynamics data.**
 
-MDNER is a NER model developed specifically to extract information from MD simulations.
+MDNER is a NER model developed specifically to extract information from MD simulations. This project is part of the MDVERSE project [[1]](#1).
 
 [![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
 [![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
@@ -69,7 +69,8 @@ python3 scripts/generate_annotation.py
 ### Parameters
 
 ```
-usage: generate_annotation.py [-h] [-c] [-p {mbart,bart-paraphrase,pegasus}] [-s SEED] [threshold] [cutoff]
+usage: generate_annotation.py [-h] [-c] [-p {mbart,bart-paraphrase,pegasus}] [-s SEED] [threshold]
+[cutoff]
 
 Generate text and json files in the annotation folder to be used as training sets.
 
@@ -170,10 +171,10 @@ Here, we define a model where the dropout will be 0.4 (40% of the nodes will be 
 At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
 ## 📈 Results
-From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522.
+From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522. The bash script `scripts/build` is used to create the different models.
 
 <figure class="table" align="center">
-<figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 3 replicates. The best precision scores per entity are shown in bold.</figcaption>
+<figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 10 replicates. The best precision scores per entity are shown in bold.</figcaption>
 <table align="center">
 <thead>
   <tr>
@@ -190,39 +191,39 @@ From the original and paraphrased texts obtained with the mBART model, we have t
   <tr style="font-weight: bold;">
     <td align="center">MOL (molecule)</td>
     <td align="center">75 ± 1.3</td>
-    <td align="center"><b>84 ± 1.4</b></td>
+    <td align="center"><b>91 ± 1.3</b></td>
   </tr>
   <tr>
     <td align="center">FFM (force field &amp; model)</td>
     <td align="center">86 ± 2.1</td>
-    <td align="center"><b>90 ± 1.6</b></td>
+    <td align="center"><b>94 ± 2.8</b></td>
   </tr>
   <tr>
     <td align="center">TEMP (temperature)</td>
     <td align="center">90 ± 2.1</td>
-    <td align="center"><b>91 ± 1.9</b></td>
+    <td align="center"><b>90 ± 0.0</b></td>
   </tr>
   <tr>
     <td align="center">STIME (simulation time)</td>
     <td align="center">71 ± 6.3</td>
-    <td align="center"><b>73 ± 8.2</b></td>
+    <td align="center"><b>82 ± 3.6</b></td>
   </tr>
   <tr>
     <td align="center">SOFT (software)</td>
-    <td align="center"><b>77 ± 1.5</b></td>
-    <td align="center">66 ± 5.3</td>
+    <td align="center">77 ± 1.5</td>
+    <td align="center"><b>92 ± 3.3</b></td>
   </tr>
   <tr>
     <td align="center">Total</td>
     <td align="center">75 ± 0.7</td>
-    <td align="center"><b>82 ± 1.4</b></td>
+    <td align="center"><b>91 ± 1.0</b></td>
   </tr>
 </tbody>
 </table>
 </figure>
 
-We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 75% to 84%. Performance for the other entities is improved slightly, except for the SOFT entity.
-The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[1]](#1).
+We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 75% to 91%. Performance for the other entities is improved slightly, except for the SOFT entity.
+The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[2]](#2).
 
 
 ## 🚀 Use MDNER
@@ -238,6 +239,10 @@ streamlit run scripts/mdner_app.py -- --model my_model
 Using MDNER does not require a GPU. It may be advantageous to use a GPU to speed up the predictions of the NER model, but it is not mandatory.
 
 ## References
+
 <a id="1">[1]</a> 
+Tiemann JKS, Szczuka M, Bouarroudj L, Oussaren M, Garcia S, Howard RJ, Delemotte L, Lindahl E, Baaden M, Lindorff-Larsen K, Chavent M, Poulain P. MDverse: Shedding Light on the Dark Matter of Molecular Dynamics Simulations. bioRxiv [Preprint]. 2023 May 2:2023.05.02.538537. doi: 10.1101/2023.05.02.538537. PMID: 37205542; PMCID: PMC10187166.
+
+<a id="2">[2]</a> 
 Suchin Gururangan, Ana Marasović, Swabha Swayamdipta, Kyle Lo, Iz Beltagy, Doug Downey, and Noah A. Smith. 2020. Don’t Stop Pretraining: Adapt Language Models to Domains and Tasks. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, pages 8342–8360, Online. Association for Computational Linguistics.
 
