@@ -14,13 +14,15 @@ done
 for model_name in "${model_names[@]}"
 do
     # Define the parameters for each model
-    params="-c -t 0.1 0.0 1.0 0.0 -n $model_name -g -p -s 7522"
+    params1="-c -t 0.1 0.0 1.0 0.0 -n ${model_name}_paraphrase -g -p -s 7522"
+    params2="-c -t 0.1 0.0 1.0 0.0 -n ${model_name} -g -s 7522"
 
     # Print the model name and parameters
     echo "Building model $model_name"
 
-    # Call the Python script with the parameters
-    python scripts/mdner.py $params
+    # Call the Python scripts with the parameters
+    python scripts/mdner.py $params1
+    python scripts/mdner.py $params2
 done
 
 # Deactivate the mdner environment
