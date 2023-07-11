@@ -171,7 +171,11 @@ Here, we define a model where the dropout will be 0.4 (40% of the nodes will be 
 At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
 ## 📈 Results
-From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522. The bash script `scripts/build` is used to create the different models.
+From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522. The bash script `scripts/build` is used to create the different models :
+
+```bash
+bash scripts/build.sh
+```
 
 <figure class="table" align="center">
 <figcaption> Table 1 - Mean precision scores with standard deviation for each entity of the Transformers model based on "<i>BioMed-RoBERTa-base</i>" without and with paraphrase. Each model was generated over 10 replicates. The best precision scores per entity are shown in bold.</figcaption>
