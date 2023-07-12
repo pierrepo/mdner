@@ -31,17 +31,18 @@ Install [mamba](https://github.com/mamba-org/mamba) :
 conda install mamba -n base -c conda-forge
 ```
 
-Create the `mdner` conda environment and load it :
+Create the `mdner` and `mdner_app` conda environments :
 
 ```bash
 mamba env create -f binder/environment.yml
-conda activate mdner
+mamba env create -f binder/app.yml
 ```
 
-Note: you can also update the conda environment with :
+Note: you can also update the conda environments with :
 
 ```bash
 mamba env update -f binder/environment.yml
+mamba env update -f binder/app.yml
 ```
 
 To deactivate an active environment, use :
@@ -54,9 +55,10 @@ conda deactivate
 
 Generate json files for spaCy NER and text files containing titles and descriptions of our MD datasets available [here](https://sandbox.zenodo.org/record/1171298).
 
-Launch the generation of text files and json files :
+Load the `mdner` conda environment and launch the generation of text files and json files :
 
 ```
+conda activate mdner
 python3 scripts/generate_annotation.py
 ```
 ➤ Outputs :
@@ -233,9 +235,10 @@ We note an increase in the precision score, particularly for our key entity, the
 
 ![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/webapp.gif)
 
-In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it. Simply enter the name of the model as an argument, as in the following command :
+In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it. Load the `mdner_app` conda environment and lauch a website by simply entering the name of the model as an argument, as in the following command :
 
 ```
+conda activate mdner_app
 streamlit run scripts/mdner_app.py -- --model my_model
 ```
 
