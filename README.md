@@ -226,8 +226,7 @@ bash scripts/build.sh
 </table>
 </figure>
 
-We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 80% to 91%. Performance for the other entities is improved slightly, except for the SOFT entity.
-The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[2]](#2).
+We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 80% to 91%. Performance for the other entities is improved. The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[2]](#2).
 
 
 ## 🚀 Use MDNER
