@@ -1,0 +1,23 @@
+name: mdner_app
+# channels priority
+# see https://bioconda.github.io/
+# conda-forge has highest priority
+channels:
+  - defaults
+  - bioconda
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pip
+  - pyyaml
+  # linters and formaters
+  - pydocstyle
+  - black
+  - ruff
+  # Parquet tools
+  - parquet-tools
+  - pip:
+      - watermark
+      - tqdm
+      - streamlit
+      - numba
