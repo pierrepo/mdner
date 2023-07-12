@@ -17,6 +17,8 @@ dependencies:
   # Parquet tools
   - parquet-tools
   - pip:
+      - spacy[transformers,lookups]
+      - transformers
       - watermark
       - tqdm
       - streamlit
