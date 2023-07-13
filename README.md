@@ -53,7 +53,7 @@ conda deactivate
 
 ## ✍ Generate annotations data
 
-Generate json files for spaCy NER and text files containing titles and descriptions of our MD datasets available [here](https://sandbox.zenodo.org/record/1171298).
+This section consists of selecting text datasets (titles and descriptions) that will be used to build our NER model. This consists of generating json files and text files containing the titles and descriptions of our available MD datasets [here](https://sandbox.zenodo.org/record/1171298). 
 
 Load the `mdner` conda environment and launch the generation of text files and json files :
 
