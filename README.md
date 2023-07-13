@@ -17,14 +17,17 @@ MDNER is a NER model developed specifically to extract information from MD simul
 For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB.
 It should also be noted that you must have a CUDA driver installed on your system. The code uses CUDA, a parallel computing platform developed by NVIDIA, to interact with GPUs. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage).
 
-## 📦 Setup your environment
+## Download sources
 
 Clone the repository and move to the new directory :
 
-```bash
+```
 git clone https://github.com/pierrepo/mdner.git
 cd mdner
 ```
+
+## 📦 Setup your environment
+
 Install [mamba](https://github.com/mamba-org/mamba) :
 
 ```bash
@@ -51,9 +54,9 @@ To deactivate an active environment, use :
 conda deactivate
 ```
 
-## ✍ Generate annotations data
+## ✍ Annotate texts
 
-This section consists of selecting text datasets (titles and descriptions) that will be used to build our NER model. This consists of generating json files and text files containing the titles and descriptions of our available MD datasets [here](https://sandbox.zenodo.org/record/1171298). 
+This section consists of selecting text datasets (titles and descriptions) that will be used to build our NER model. This consists of generating json files and text files containing the titles and descriptions of our available MD datasets [here](https://sandbox.zenodo.org/record/1171298).
 
 Load the `mdner` conda environment and launch the generation of text files and json files :
 
@@ -67,6 +70,8 @@ python3 scripts/generate_annotation.py
 [2023-07-07 17:43:59,457] [INFO] 284 texts selected according the corpus similarity
 [2023-07-07 17:43:59,545] [INFO] Generation completed
 ```
+
+This script does not require a GPU.
 
 ### Parameters
 
@@ -91,7 +96,7 @@ options:
                         value is 42.
 ```
 
-Annotating json files requires manual annotation and must be in the `annotations` folder. Load the `mdner_app` conda environment and use the `Entity Annotator` to annotate and edit json files by typing the following command :
+Annotating json files requires manual annotation and must be in the `annotations` folder. Load the `mdner_app` conda environment and use the `entity annotator` to annotate and edit json files by typing the following command :
 
 ```
 conda activate mdner_app
@@ -101,6 +106,8 @@ streamlit run scripts/entity_annotator.py
 ![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/annotator.gif)
 
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
+
+## ✍ Add paraphrase
 
 If you think you don't have enough data, you can paraphrase the annotated texts with the following command:
 
@@ -112,9 +119,10 @@ Paraphrasing consists to keeping the context of the original text and reformulat
 
 A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
-## 📑 Create MDNER
+## Train and evaluate the NER model
+### 📑 Create MDNER
 
-The `mdner.py` script is used to create the model according to the defined parameters.
+The `mdner.py` script is used to create the model according to the defined parameters. Using this script requires a GPU. In our case, we used an NVIDIA GeForce RTX 3060 GB vram.
 
 ### Parameters
 
@@ -176,7 +184,7 @@ Here, we define a model where the dropout will be 0.4 (40% of the nodes will be 
 
 At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
-## 📈 Results
+### 📈 Results
 From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522. The results obtained are available in the file `results/outputs/results.csv` and the bash script `scripts/build` is used to create the different models :
 
 ```bash
@@ -235,7 +243,7 @@ bash scripts/build.sh
 We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 80% to 91%. Performance for the other entities is improved. The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[2]](#2).
 
 
-## 🚀 Use MDNER
+## 🚀 Use NER model
 
 ![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/webapp.gif)
 
