@@ -94,7 +94,7 @@ options:
 Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `Entity Annotator` to annotate and edit json files by typing the following command :
 
 ```
-streamlit run scripts/Entity_Annotator.py
+streamlit run scripts/entity_annotator.py
 ```
 
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
