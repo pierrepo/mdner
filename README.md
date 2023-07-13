@@ -91,9 +91,10 @@ options:
                         value is 42.
 ```
 
-Annotating json files requires manual annotation and must be in the `annotations` folder. Use the `Entity Annotator` to annotate and edit json files by typing the following command :
+Annotating json files requires manual annotation and must be in the `annotations` folder. Load the `mdner_app` conda environment and use the `Entity Annotator` to annotate and edit json files by typing the following command :
 
 ```
+conda activate mdner_app
 streamlit run scripts/entity_annotator.py
 ```
 
@@ -147,6 +148,7 @@ You can introduce paraphrases only in the learning set (training + test) with th
 ### Example
 
 ```
+conda activate mdner
 python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
 ```
 ➤ Outputs :
