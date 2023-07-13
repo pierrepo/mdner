@@ -30,7 +30,6 @@ dependencies:
       - torch
       - watermark
       - tqdm
-      - streamlit
       - numba
       - protobuf==3.20.*
       # For cosinus similarity analysis
