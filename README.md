@@ -97,6 +97,8 @@ Annotating json files requires manual annotation and must be in the `annotations
 streamlit run scripts/entity_annotator.py
 ```
 
+![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/annotator.gif)
+
 There are various other tools for annotating such as [Prodigy](https://prodi.gy/) or a site that allows it: [https://tecoholic.github.io/ner-annotator/](https://tecoholic.github.io/ner-annotator/).
 
 If you think you don't have enough data, you can paraphrase the annotated texts with the following command:
