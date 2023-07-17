@@ -105,8 +105,15 @@ There are various other tools for annotating such as [Prodigy](https://prodi.gy/
 
 If you think you don't have enough data, you can paraphrase the annotated texts with the following command:
 
-```
+```bash
 python3 scripts/generate_annotation.py -p mbart
+```
+
+
+➤ Output:
+```bash
+to come
+
 ```
 
 Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 6 hours.
@@ -149,11 +156,12 @@ You can introduce paraphrases only in the learning set (training + test) with th
 
 ### Example
 
-```
+```bash
 conda activate mdner
 python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
 ```
-➤ Outputs :
+
+➤ Output:
 
 ```bash
 [2023-07-07 18:12:15,701] [INFO] Seed: 7522
@@ -163,6 +171,7 @@ python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
 [2023-07-07 18:12:17,718] [INFO] test_data: 100%| Size: 122
 [2023-07-07 18:12:18,277] [INFO] eval_data: 100%| Size: 34
 [2023-07-07 18:12:18,454] [INFO] Checking GPU availability
+[2023-07-07 18:12:18,561] [INFO] GPU is available
 [...]
 =============================== NER (per type) ===============================
 
