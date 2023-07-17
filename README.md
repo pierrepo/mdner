@@ -4,11 +4,8 @@
 
 MDNER is a NER model developed specifically to extract information from MD simulations. This project is part of the MDVERSE project [[1]](#1).
 
-[![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
-[![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
-[![Black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
-[![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)](https://github.com/pierrepo/mdner)
+
 
 ## ⚙️ Prerequisites
 
@@ -17,9 +14,9 @@ MDNER is a NER model developed specifically to extract information from MD simul
 For the GPU code, it's essential to have a relatively new Nvidia GPU that has a minimum memory capacity of 8.0 GiB.
 It should also be noted that you must have a CUDA driver installed on your system. The code uses CUDA, a parallel computing platform developed by NVIDIA, to interact with GPUs. No specific requirements are needed for the CPU code. To use spaCy, see the [spaCy documentation](https://spacy.io/usage).
 
-## Download sources
+## 📥 Download sources
 
-Clone the repository and move to the new directory :
+Clone the repository and move to the newly created `mdner` directory:
 
 ```
 git clone https://github.com/pierrepo/mdner.git
@@ -28,27 +25,23 @@ cd mdner
 
 ## 📦 Setup your environment
 
-Install [mamba](https://github.com/mamba-org/mamba) :
+Install conda and [mamba](https://github.com/mamba-org/mamba).
 
-```bash
-conda install mamba -n base -c conda-forge
-```
-
-Create the `mdner` and `mdner_app` conda environments :
+Create the `mdner` and `mdner_app` conda environments:
 
 ```bash
 mamba env create -f binder/environment.yml
 mamba env create -f binder/app.yml
 ```
 
-Note: you can also update the conda environments with :
+Note: you can also update conda environments with:
 
 ```bash
 mamba env update -f binder/environment.yml
 mamba env update -f binder/app.yml
 ```
 
-To deactivate an active environment, use :
+To deactivate an active conda environment, use:
 
 ```
 conda deactivate
@@ -58,12 +51,13 @@ conda deactivate
 
 This section consists of selecting text datasets (titles and descriptions) that will be used to build our NER model. This consists of generating json files and text files containing the titles and descriptions of our available MD datasets [here](https://sandbox.zenodo.org/record/1171298).
 
-Load the `mdner` conda environment and launch the generation of text files and json files :
+Load the `mdner` conda environment and launch the generation of text files and json files:
 
 ```
 conda activate mdner
 python3 scripts/generate_annotation.py
 ```
+
 ➤ Outputs :
 ```bash
 [2023-07-07 17:43:56,748] [INFO] 974 texts selected according the threshold length
@@ -115,14 +109,14 @@ If you think you don't have enough data, you can paraphrase the annotated texts 
 python3 scripts/generate_annotation.py -p mbart
 ```
 
-Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing.
+Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 6 hours.
 
 A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
-## Train and evaluate the NER model
-### 📑 Create MDNER
+## 📑 Train and evaluate the NER model 📈
+### Create MDNER
 
-The `mdner.py` script is used to create the model according to the defined parameters. Using this script requires a GPU. In our case, we used an NVIDIA GeForce RTX 3060 GB vram.
+The `mdner.py` script is used to create the model according to the defined parameters. Using this script requires a GPU. In our test case, we used an NVIDIA GeForce RTX 3060 12 GB vram.
 
 ### Parameters
 
@@ -151,7 +145,7 @@ options:
 
 To create the `mdner`, the `-c`, `-t` and `-n` options must be used. The `-c` option tells the script to create a model. The `-t` option is the hyperparameters to be used to train the model. The `-n` option corresponds to the name model that will be created.
 
-You can introduce paraphrases only in the learning set (training + test) with the `-p` option.
+You can introduce paraphrases only in the learning set (training + test) with the `-p` option. Creating a model with a GPU takes more than 1 hour on average, whereas with a CPU it takes around 30 minutes.
 
 ### Example
 
@@ -180,12 +174,18 @@ STIME   81.25   89.66   85.25
 TEMP    85.71   66.67   75.00
 ```
 
-Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model. The `-p` is used to add paraphrases to the learning dataset.
+Here, we define a model where the dropout will be 0.1 (10% of the nodes will be deactivated). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. 
+
+We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model.
+
+The `-p` option is used to add paraphrases to the learning dataset.
+
+The `-s` option specifies the seed used to sample the data sets. You should be able to obtain similar results wit the same seed.
 
 At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
-### 📈 Results
-From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on seed 7522. The results obtained are available in the file `results/outputs/results.csv` and the bash script `scripts/build` is used to create the different models :
+### Results
+From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on the seed 7522 and 10 replicates were generated for each of the 2 models. These replicates took more than 20 hours to run. The results obtained are available in the file `results/outputs/results.csv` and the bash script `scripts/build` is used to create the different models :
 
 ```bash
 bash scripts/build.sh
@@ -243,11 +243,11 @@ bash scripts/build.sh
 We note an increase in the precision score, particularly for our key entity, the MOL entity, which rises from 80% to 91%. Performance for the other entities is improved. The NER models were able to identify molecule names not present in the learning dataset, perfectly underlining the ability of the NER model to generalize and identify the desired entities, and demonstrating the relevance of fine-tuning on Transformer models [[2]](#2).
 
 
-## 🚀 Use NER model
+## 🚀 Use the NER model
 
 ![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/webapp.gif)
 
-In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it. Load the `mdner_app` conda environment and lauch a website by simply entering the name of the model as an argument, as in the following command :
+In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and annotate it automatically. Load the `mdner_app` conda environment and run the Streamlit app by entering the name of the model as an argument, as in the following command:
 
 ```
 conda activate mdner_app
