@@ -4,11 +4,8 @@
 
 MDNER is a NER model developed specifically to extract information from MD simulations. This project is part of the MDVERSE project [[1]](#1).
 
-[![Python 3.10.9](https://img.shields.io/badge/python-%E2%89%A5_3.10.9-blue.svg)](https://www.python.org/downloads/release/python-397/)
-[![Conda 22.11.1](https://img.shields.io/badge/conda-%E2%89%A5_22.11.1-green.svg)](https://docs.conda.io/en/latest/miniconda.html)
 [![GitHub last commit](https://img.shields.io/github/last-commit/pierrepo/mdner.svg)](https://github.com/pierrepo/mdner)
-[![Black](https://img.shields.io/badge/code%20style-black-black)](https://github.com/psf/black)
-[![GitHub stars](https://img.shields.io/github/stars/pierrepo/mdner.svg?style=social)](https://github.com/pierrepo/mdner)
+
 
 ## ⚙️ Prerequisites
 
@@ -19,7 +16,7 @@ It should also be noted that you must have a CUDA driver installed on your syste
 
 ## Download sources
 
-Clone the repository and move to the new directory :
+Clone the repository and move to the newly created `mdner` directory:
 
 ```
 git clone https://github.com/pierrepo/mdner.git
@@ -28,27 +25,23 @@ cd mdner
 
 ## 📦 Setup your environment
 
-Install [mamba](https://github.com/mamba-org/mamba) :
+Install conda and [mamba](https://github.com/mamba-org/mamba).
 
-```bash
-conda install mamba -n base -c conda-forge
-```
-
-Create the `mdner` and `mdner_app` conda environments :
+Create the `mdner` and `mdner_app` conda environments:
 
 ```bash
 mamba env create -f binder/environment.yml
 mamba env create -f binder/app.yml
 ```
 
-Note: you can also update the conda environments with :
+Note: you can also update conda environments with:
 
 ```bash
 mamba env update -f binder/environment.yml
 mamba env update -f binder/app.yml
 ```
 
-To deactivate an active environment, use :
+To deactivate an active conda environment, use:
 
 ```
 conda deactivate
@@ -58,12 +51,13 @@ conda deactivate
 
 This section consists of selecting text datasets (titles and descriptions) that will be used to build our NER model. This consists of generating json files and text files containing the titles and descriptions of our available MD datasets [here](https://sandbox.zenodo.org/record/1171298).
 
-Load the `mdner` conda environment and launch the generation of text files and json files :
+Load the `mdner` conda environment and launch the generation of text files and json files:
 
 ```
 conda activate mdner
 python3 scripts/generate_annotation.py
 ```
+
 ➤ Outputs :
 ```bash
 [2023-07-07 17:43:56,748] [INFO] 974 texts selected according the threshold length
@@ -122,7 +116,7 @@ A presentation of the annotation structure can be found on [ANNOTATIONS](https:/
 ## Train and evaluate the NER model
 ### 📑 Create MDNER
 
-The `mdner.py` script is used to create the model according to the defined parameters. Using this script requires a GPU. In our case, we used an NVIDIA GeForce RTX 3060 GB vram.
+The `mdner.py` script is used to create the model according to the defined parameters. Using this script requires a GPU. In our test case, we used an NVIDIA GeForce RTX 3060 12 GB vram.
 
 ### Parameters
 
@@ -157,7 +151,7 @@ You can introduce paraphrases only in the learning set (training + test) with th
 
 ```
 conda activate mdner
-python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
+python3 scripts/mdner.py -c -t 0.4 0.0 1.0 0.0 -n my_model -g -p -s 7522
 ```
 ➤ Outputs :
 
@@ -180,7 +174,13 @@ STIME   81.25   89.66   85.25
 TEMP    85.71   66.67   75.00
 ```
 
-Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivate). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model. The `-p` is used to add paraphrases to the learning dataset.
+Here, we define a model where the dropout will be 0.4 (40% of the nodes will be deactivated). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. 
+
+We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model.
+
+The `-p` option is used to add paraphrases to the learning dataset.
+
+The `-s` option specifies the seed used to sample the data sets. You should be able to obtain similar results wit the same seed.
 
 At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
@@ -247,7 +247,7 @@ We note an increase in the precision score, particularly for our key entity, the
 
 ![](https://raw.githubusercontent.com/pierrepo/mdner/master/assets/webapp.gif)
 
-In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and evaluate it. Load the `mdner_app` conda environment and lauch a website by simply entering the name of the model as an argument, as in the following command :
+In order to run an example, you can launch a website with [Streamlit](https://streamlit.io/) to apply the MDNER model to a text and annotate it automatically. Load the `mdner_app` conda environment and run the Streamlit app by entering the name of the model as an argument, as in the following command:
 
 ```
 conda activate mdner_app
