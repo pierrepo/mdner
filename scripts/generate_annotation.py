@@ -314,6 +314,8 @@ def generate_paraphrase(
     model: transformers.PreTrainedModel,
     tokenizer: transformers.PreTrainedTokenizerFast,
     is_pegasus: bool,
+    src="en_XX",
+    trsl="en_XX",
 ) -> str:
     """
     Generate a paraphrase of the input sentence.
@@ -328,12 +330,18 @@ def generate_paraphrase(
         The tokenizer for paraphrase.
     is_pegasus: bool
         True if the model is Pegasus, False otherwise.
+    src: str
+        The language of the original text.
+    trsl: str
+        The language of the text to be paraphrased.
 
     Returns
     -------
     str
         The paraphrase of the input sentence.
     """
+    if src != trsl:
+        tokenizer.src_lang = src
     batch = tokenizer(
         input_sentence, return_tensors="pt", padding="longest", truncation=is_pegasus
     )
@@ -347,6 +355,9 @@ def generate_paraphrase(
         repetition_penalty=10.0,
         diversity_penalty=3.0,
         max_length=1024,
+        forced_bos_token_id=tokenizer.lang_code_to_id[trsl]
+        if src != trsl
+        else model.config.forced_bos_token_id,
     )
     generated_sentence = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
     return generated_sentence
@@ -417,16 +428,29 @@ def predict_paraphrase(
     """
     # The length must be less than 1024 characters according the model
     if len(text) < 1024:
-        predict_text = generate_paraphrase(
-            text, model, tokenizer, choice_model == "pegasus"
-        )[0]
+        if choice_model == "mbart":
+            translation = generate_paraphrase(
+                text, model, tokenizer, False, "en_XX", "ru_RU"
+            )[0]
+            predict_text = generate_paraphrase(translation, model, tokenizer, False, "ru_RU", "en_XX")[0]
+        else:
+            predict_text = generate_paraphrase(
+                text, model, tokenizer, choice_model == "pegasus"
+            )[0]
     else:
-        # Split the text into parts with a maximum size of 1024 characters
-        splited_text = split_text(text)
-        predict_text = " ".join(
-            generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[0]
-            for text in splited_text
-        )
+        # Split the text into parts with a maximum size of 1024 characters according model
+        if choice_model == "mbart":
+            splited_text = split_text(text)
+            predict_text = ""
+            for text in splited_text :
+                translation = generate_paraphrase(text, model, tokenizer, False, "en_XX", "ru_RU")
+                predict_text += " " + generate_paraphrase(translation, model, tokenizer, False, "ru_RU", "en_XX")[0]
+        else :
+            splited_text = split_text(text)
+            predict_text = " ".join(
+                generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[0]
+                for text in splited_text
+            )
     return predict_text
 
 
@@ -520,7 +544,7 @@ def paraphrase_annotation(choice_model: str, seed: int):
                     ents = get_entities(annotations, text)
                     predict_text = predict_paraphrase(
                         text, model, tokenizer, choice_model
-                    )
+                    )   
                     new_entities = []
                     for ent in ents:
                         pos = found_entity(ent[0], predict_text, new_entities)
