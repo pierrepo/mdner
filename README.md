@@ -120,7 +120,7 @@ python3 scripts/generate_annotation.py -p mbart
 [2023-07-18 14:39:49,113] [INFO] Paraphrase processing with mbart model:  100%| Files found: 380
 ```
 
-Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 6 hours.
+Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 12 hours.
 
 A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
