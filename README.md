@@ -112,8 +112,12 @@ python3 scripts/generate_annotation.py -p mbart
 
 ➤ Output:
 ```bash
-to come
-
+[2023-07-18 14:39:36,769] [DEBUG] Starting new HTTPS connection (1): huggingface.co:443
+[2023-07-18 14:39:36,892] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/config.json HTTP/1.1" 200 0
+[2023-07-18 14:39:46,622] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/generation_config.json HTTP/1.1" 200 0
+[2023-07-18 14:39:46,727] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/tokenizer_config.json HTTP/1.1" 200 0
+[2023-07-18 14:39:49,111] [INFO] Seed: 42
+[2023-07-18 14:39:49,113] [INFO] Paraphrase processing with mbart model:  100%| Files found: 380
 ```
 
 Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 6 hours.
