@@ -18,7 +18,6 @@ import transformers
 import spacy
 from tqdm import tqdm
 from datetime import datetime
-import torch
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
