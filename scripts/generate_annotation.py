@@ -18,12 +18,16 @@ import transformers
 import spacy
 from tqdm import tqdm
 from datetime import datetime
+import torch
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
 )
 parser.add_argument(
-    "-c", "--clear", help="Clear the annotation folder and generate files.", action="store_true"
+    "-c",
+    "--clear",
+    help="Clear the annotation folder and generate files.",
+    action="store_true",
 )
 parser.add_argument(
     "threshold",
@@ -282,7 +286,7 @@ def load_model_paraphrase(choice_model: str, seed: int) -> tuple:
     else:
         model_name = "facebook/mbart-large-50-many-to-many-mmt"
         model = MBartForConditionalGeneration.from_pretrained(model_name)
-        tokenizer = MBart50TokenizerFast.from_pretrained(model_name, use_fast=False)
+        tokenizer = MBart50TokenizerFast.from_pretrained(model_name, use_fast=True)
     logging.info("Seed: " + str(seed))
     return model, tokenizer
 
@@ -432,7 +436,9 @@ def predict_paraphrase(
             translation = generate_paraphrase(
                 text, model, tokenizer, False, "en_XX", "ru_RU"
             )[0]
-            predict_text = generate_paraphrase(translation, model, tokenizer, False, "ru_RU", "en_XX")[0]
+            predict_text = generate_paraphrase(
+                translation, model, tokenizer, False, "ru_RU", "en_XX"
+            )[0]
         else:
             predict_text = generate_paraphrase(
                 text, model, tokenizer, choice_model == "pegasus"
@@ -442,13 +448,22 @@ def predict_paraphrase(
         if choice_model == "mbart":
             splited_text = split_text(text)
             predict_text = ""
-            for text in splited_text :
-                translation = generate_paraphrase(text, model, tokenizer, False, "en_XX", "ru_RU")
-                predict_text += " " + generate_paraphrase(translation, model, tokenizer, False, "ru_RU", "en_XX")[0]
-        else :
+            for text in splited_text:
+                translation = generate_paraphrase(
+                    text, model, tokenizer, False, "en_XX", "ru_RU"
+                )
+                predict_text += (
+                    " "
+                    + generate_paraphrase(
+                        translation, model, tokenizer, False, "ru_RU", "en_XX"
+                    )[0]
+                )
+        else:
             splited_text = split_text(text)
             predict_text = " ".join(
-                generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[0]
+                generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[
+                    0
+                ]
                 for text in splited_text
             )
     return predict_text
@@ -544,7 +559,7 @@ def paraphrase_annotation(choice_model: str, seed: int):
                     ents = get_entities(annotations, text)
                     predict_text = predict_paraphrase(
                         text, model, tokenizer, choice_model
-                    )   
+                    )
                     new_entities = []
                     for ent in ents:
                         pos = found_entity(ent[0], predict_text, new_entities)
