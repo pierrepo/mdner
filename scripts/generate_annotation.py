@@ -18,6 +18,7 @@ import transformers
 import spacy
 from tqdm import tqdm
 from datetime import datetime
+import torch
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
@@ -274,6 +275,7 @@ def load_model_paraphrase(choice_model: str, seed: int) -> tuple:
         The model and the tokenizer.
     """
     transformers.set_seed(seed)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if choice_model == "pegasus":
         model_name = "tuner007/pegasus_paraphrase"
         model = PegasusForConditionalGeneration.from_pretrained(model_name)
@@ -286,6 +288,7 @@ def load_model_paraphrase(choice_model: str, seed: int) -> tuple:
         model_name = "facebook/mbart-large-50-many-to-many-mmt"
         model = MBartForConditionalGeneration.from_pretrained(model_name)
         tokenizer = MBart50TokenizerFast.from_pretrained(model_name, use_fast=True)
+    model.to(device)
     logging.info("Seed: " + str(seed))
     return model, tokenizer
 
@@ -348,22 +351,26 @@ def generate_paraphrase(
     batch = tokenizer(
         input_sentence, return_tensors="pt", padding="longest", truncation=is_pegasus
     )
-    generated_ids = model.generate(
-        batch["input_ids"],
-        temperature=1.2,
-        num_beams=8,
-        num_beam_groups=8,
-        early_stopping=True,
-        num_return_sequences=1,
-        repetition_penalty=10.0,
-        diversity_penalty=3.0,
-        max_length=1024,
-        forced_bos_token_id=tokenizer.lang_code_to_id[trsl]
-        if src != trsl
-        else model.config.forced_bos_token_id,
-    )
-    generated_sentence = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-    return generated_sentence
+    batch = batch.to("cuda:0" if torch.cuda.is_available() else "cpu")
+    with torch.no_grad():
+        generated_ids = model.generate(
+            batch["input_ids"],
+            temperature=1.2,
+            num_beams=8,
+            num_beam_groups=8,
+            early_stopping=True,
+            num_return_sequences=1,
+            repetition_penalty=10.0,
+            diversity_penalty=3.0,
+            max_length=1024,
+            forced_bos_token_id=tokenizer.lang_code_to_id[trsl]
+            if src != trsl
+            else model.config.forced_bos_token_id,
+        )
+        generated_sentence = tokenizer.batch_decode(
+            generated_ids, skip_special_tokens=True
+        )
+        return generated_sentence
 
 
 def split_text(text: str) -> list:
