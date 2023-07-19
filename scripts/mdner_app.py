@@ -18,7 +18,7 @@ parser.add_argument("-m", "--model", dest="model", help="Model name", required=T
 args = parser.parse_args()
 
 
-def save_to_json(doc: object, text: str, export_button: object):
+def save_to_json(doc: object, text: str, export_button: st.columns):
     """
     Save annotated text in json format.
 
