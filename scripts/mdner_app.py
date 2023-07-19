@@ -18,7 +18,7 @@ parser.add_argument("-m", "--model", dest="model", help="Model name", required=T
 args = parser.parse_args()
 
 
-def save_to_json(doc: object, text: str):
+def save_to_json(doc: object, text: str, export_button: object):
     """
     Save annotated text in json format.
 
@@ -34,18 +34,11 @@ def save_to_json(doc: object, text: str):
     for ent in doc.ents:
         entities.append([ent.start_char, ent.end_char, ent.label_])
     # Define the annotations in the desired format
-    annotations = [
-        [
-            text,
-            {
-                "entities": entities
-            }
-        ]
-    ]
+    annotations = [[text, {"entities": entities}]]
     # Create a dictionary to represent the JSON structure
     to_json = {
         "classes": ["TEMP", "SOFT", "STIME", "MOL", "FFM"],
-        "annotations": annotations
+        "annotations": annotations,
     }
     # Export in JSON format
     json_file = json.dumps(to_json)
@@ -53,9 +46,13 @@ def save_to_json(doc: object, text: str):
     current_date = date.today().strftime("%Y-%m-%d")
     # Create the file name with the current date
     filename = f"annotations_{current_date}.json"
-    # Write the JSON to a file
-    with open(f"annotations/{filename}", "w") as file:
-        file.write(json_file)
+    with export_button:
+        st.download_button(
+            label="Export to json",
+            file_name=filename,
+            mime="application/json",
+            data=json_file,
+        )
 
 
 def use_model(model):
@@ -81,41 +78,38 @@ def use_model(model):
         unsafe_allow_html=True,
     )
     text = st.text_area("Text to annotate", height=300)
-    run_button, export_button, _ = st.columns([1, 1, 10])
+    run_button, export_button, _ = st.columns([1, 2, 10])
     with run_button:
         apply = st.button("Run")
-        if apply:
-            with export_button:
-                export = st.button("Export to json")
-            # Load the best model
-            nlp = spacy.load(f"results/models/{model}/model-best")
-            # Define the colors for the entities
-            colors = {
-                "TEMP": "#FF0000",
-                "SOFT": "#FFA500",
-                "STIME": "#FD6C9E",
-                "FFM": "#00FFFF",
-                "MOL": "#FFFF00",
-            }
-            options = {
-                "ents": [
-                    "TEMP",
-                    "SOFT",
-                    "STIME",
-                    "FFM",
-                    "MOL",
-                ],
-                "colors": colors,
-            }
-            # Apply the model to the text
-            doc = nlp(text)
-            # Visualize the entities in html
-            html = displacy.render(doc, style="ent", options=options)
-            st.divider()
-            st.write(html, unsafe_allow_html=True)
-            st.divider()
-            if export:
-                save_to_json(doc, text)
+    if apply:
+        # Load the best model
+        nlp = spacy.load(f"results/models/{model}/model-best")
+        # Define the colors for the entities
+        colors = {
+            "TEMP": "#FF0000",
+            "SOFT": "#FFA500",
+            "STIME": "#FD6C9E",
+            "FFM": "#00FFFF",
+            "MOL": "#FFFF00",
+        }
+        options = {
+            "ents": [
+                "TEMP",
+                "SOFT",
+                "STIME",
+                "FFM",
+                "MOL",
+            ],
+            "colors": colors,
+        }
+        # Apply the model to the text
+        doc = nlp(text)
+        # Visualize the entities in html
+        html = displacy.render(doc, style="ent", options=options)
+        st.divider()
+        st.write(html, unsafe_allow_html=True)
+        st.divider()
+        save_to_json(doc, text, export_button)
 
 
 if __name__ == "__main__":
