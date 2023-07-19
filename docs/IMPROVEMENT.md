@@ -8,3 +8,4 @@ A number of points need to be explored:
 - Optimise the hyperparameters after adding paraphrases.
 - Check the rate of unlearned molecules in the validation set, i.e. molecules not present in the learning set but present in the validation set.
 - Evaluation of other paraphrase models
+- If you want to modify a hyperparameter or parameter in the config file, use the `setup_config()` function in the `scripts/mdner.py` script.
