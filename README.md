@@ -65,7 +65,7 @@ python3 scripts/generate_annotation.py
 [2023-07-07 17:43:59,545] [INFO] Generation completed
 ```
 
-This script does not require a GPU.
+Running this script does not require a GPU.
 
 ### Parameters
 
@@ -109,7 +109,6 @@ If you think you don't have enough data, you can paraphrase the annotated texts 
 python3 scripts/generate_annotation.py -p mbart
 ```
 
-
 ➤ Output:
 ```bash
 [2023-07-18 14:39:36,769] [DEBUG] Starting new HTTPS connection (1): huggingface.co:443
@@ -120,7 +119,9 @@ python3 scripts/generate_annotation.py -p mbart
 [2023-07-18 14:39:49,113] [INFO] Paraphrase processing with mbart model:  100%| Files found: 380
 ```
 
-Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 12 hours.
+Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 2 hours.
+
+Running this script will use a GPU if one is detected, if not the CPU will be used by default.
 
 A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
