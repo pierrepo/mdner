@@ -120,7 +120,7 @@ python3 scripts/generate_annotation.py -p mbart
 [2023-07-20 16:01:46,526] [INFO] Paraphrase processing with mbart model: 100%| Files found: 380
 ```
 
-Paraphrasing consists at keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, this takes about 2.5 hours with the use of GPU.
+Paraphrasing consists at keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, this takes about 2.5 hours with the use of GPU. If no GPU is available, the paraphrasing phase could run with CPU only but it will take more time.
 
 A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
@@ -206,7 +206,7 @@ The `-s` option specifies the seed used to sample the data sets. You should be a
 
 At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
-Here, the training phase took about hours with the use of GPU.
+Here, the training phase took about 1.5 hours with the use of GPU.
 
 ### Results
 
