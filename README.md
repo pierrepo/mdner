@@ -112,11 +112,15 @@ python3 scripts/generate_annotation.py -p mbart
 
 ➤ Output:
 ```bash
-to come
-
+[2023-07-20 16:01:25,444] [DEBUG] Starting new HTTPS connection (1): huggingface.co:443
+[2023-07-20 16:01:25,651] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/config.json HTTP/1.1" 200 0
+[2023-07-20 16:01:40,441] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/generation_config.json HTTP/1.1" 200 0
+[2023-07-20 16:01:40,667] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/tokenizer_config.json HTTP/1.1" 200 0
+[2023-07-20 16:01:46,524] [INFO] Seed: 42
+[2023-07-20 16:01:46,526] [INFO] Paraphrase processing with mbart model: 100%| Files found: 380
 ```
 
-Paraphrasing consists to keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, for example, it takes at least 6 hours.
+Paraphrasing consists at keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, this takes about 2.5 hours with the use of GPU.
 
 A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
@@ -193,7 +197,10 @@ The `-s` option specifies the seed used to sample the data sets. You should be a
 
 At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
+Here, the training phase took about hours with the use of GPU.
+
 ### Results
+
 From the original and paraphrased texts obtained with the mBART model, we have trained two NER model based on the Transformers "*BioMed-RoBERTa-base*" and we evaluated the models on the validation set as shown in Table 1. The models were obtained on the seed 7522 and 10 replicates were generated for each of the 2 models. These replicates took more than 20 hours to run. The results obtained are available in the file `results/outputs/results.csv` and the bash script `scripts/build` is used to create the different models :
 
 ```bash
