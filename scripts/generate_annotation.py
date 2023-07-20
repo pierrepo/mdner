@@ -18,12 +18,16 @@ import transformers
 import spacy
 from tqdm import tqdm
 from datetime import datetime
+import torch
 
 parser = argparse.ArgumentParser(
     description="Generate text and json files in the annotation folder to be used as training sets."
 )
 parser.add_argument(
-    "-c", "--clear", help="Clear the annotation folder and generate files.", action="store_true"
+    "-c",
+    "--clear",
+    help="Clear the annotation folder and generate files.",
+    action="store_true",
 )
 parser.add_argument(
     "threshold",
@@ -271,6 +275,7 @@ def load_model_paraphrase(choice_model: str, seed: int) -> tuple:
         The model and the tokenizer.
     """
     transformers.set_seed(seed)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     if choice_model == "pegasus":
         model_name = "tuner007/pegasus_paraphrase"
         model = PegasusForConditionalGeneration.from_pretrained(model_name)
@@ -282,7 +287,8 @@ def load_model_paraphrase(choice_model: str, seed: int) -> tuple:
     else:
         model_name = "facebook/mbart-large-50-many-to-many-mmt"
         model = MBartForConditionalGeneration.from_pretrained(model_name)
-        tokenizer = MBart50TokenizerFast.from_pretrained(model_name, use_fast=False)
+        tokenizer = MBart50TokenizerFast.from_pretrained(model_name, use_fast=True)
+    model.to(device)
     logging.info("Seed: " + str(seed))
     return model, tokenizer
 
@@ -314,6 +320,8 @@ def generate_paraphrase(
     model: transformers.PreTrainedModel,
     tokenizer: transformers.PreTrainedTokenizerFast,
     is_pegasus: bool,
+    src="en_XX",
+    trsl="en_XX",
 ) -> str:
     """
     Generate a paraphrase of the input sentence.
@@ -328,28 +336,41 @@ def generate_paraphrase(
         The tokenizer for paraphrase.
     is_pegasus: bool
         True if the model is Pegasus, False otherwise.
+    src: str
+        The language of the original text.
+    trsl: str
+        The language of the text to be paraphrased.
 
     Returns
     -------
     str
         The paraphrase of the input sentence.
     """
+    if src != trsl:
+        tokenizer.src_lang = src
     batch = tokenizer(
         input_sentence, return_tensors="pt", padding="longest", truncation=is_pegasus
     )
-    generated_ids = model.generate(
-        batch["input_ids"],
-        temperature=1.2,
-        num_beams=8,
-        num_beam_groups=8,
-        early_stopping=True,
-        num_return_sequences=1,
-        repetition_penalty=10.0,
-        diversity_penalty=3.0,
-        max_length=1024,
-    )
-    generated_sentence = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)
-    return generated_sentence
+    batch = batch.to("cuda:0" if torch.cuda.is_available() else "cpu")
+    with torch.no_grad():
+        generated_ids = model.generate(
+            batch["input_ids"],
+            temperature=1.2,
+            num_beams=8,
+            num_beam_groups=8,
+            early_stopping=True,
+            num_return_sequences=1,
+            repetition_penalty=10.0,
+            diversity_penalty=3.0,
+            max_length=1024,
+            forced_bos_token_id=tokenizer.lang_code_to_id[trsl]
+            if src != trsl
+            else model.config.forced_bos_token_id,
+        )
+        generated_sentence = tokenizer.batch_decode(
+            generated_ids, skip_special_tokens=True
+        )
+        return generated_sentence
 
 
 def split_text(text: str) -> list:
@@ -417,16 +438,40 @@ def predict_paraphrase(
     """
     # The length must be less than 1024 characters according the model
     if len(text) < 1024:
-        predict_text = generate_paraphrase(
-            text, model, tokenizer, choice_model == "pegasus"
-        )[0]
+        if choice_model == "mbart":
+            translation = generate_paraphrase(
+                text, model, tokenizer, False, "en_XX", "ru_RU"
+            )[0]
+            predict_text = generate_paraphrase(
+                translation, model, tokenizer, False, "ru_RU", "en_XX"
+            )[0]
+        else:
+            predict_text = generate_paraphrase(
+                text, model, tokenizer, choice_model == "pegasus"
+            )[0]
     else:
-        # Split the text into parts with a maximum size of 1024 characters
-        splited_text = split_text(text)
-        predict_text = " ".join(
-            generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[0]
-            for text in splited_text
-        )
+        # Split the text into parts with a maximum size of 1024 characters according model
+        if choice_model == "mbart":
+            splited_text = split_text(text)
+            predict_text = ""
+            for text in splited_text:
+                translation = generate_paraphrase(
+                    text, model, tokenizer, False, "en_XX", "ru_RU"
+                )
+                predict_text += (
+                    " "
+                    + generate_paraphrase(
+                        translation, model, tokenizer, False, "ru_RU", "en_XX"
+                    )[0]
+                )
+        else:
+            splited_text = split_text(text)
+            predict_text = " ".join(
+                generate_paraphrase(text, model, tokenizer, choice_model == "pegasus")[
+                    0
+                ]
+                for text in splited_text
+            )
     return predict_text
 
 

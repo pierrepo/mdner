@@ -168,23 +168,32 @@ python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
 ➤ Output:
 
 ```bash
-[2023-07-07 18:12:15,701] [INFO] Seed: 7522
-[2023-07-07 18:12:15,707] [INFO] Add paraphrase in the learning dataset
-[2023-07-07 18:12:15,746] [WARNING] 42 files ignored because there are not many entities
-[2023-07-07 18:12:16,221] [INFO] train_data: 100%| Size: 488
-[2023-07-07 18:12:17,718] [INFO] test_data: 100%| Size: 122
-[2023-07-07 18:12:18,277] [INFO] eval_data: 100%| Size: 34
-[2023-07-07 18:12:18,454] [INFO] Checking GPU availability
-[2023-07-07 18:12:18,561] [INFO] GPU is available
+[2023-07-20 20:42:10,475] [INFO] Seed: 7522
+[2023-07-20 20:42:10,480] [INFO] Add paraphrase in the learning dataset
+[2023-07-20 20:42:10,516] [WARNING] 42 files ignored because there are not many entities
+[2023-07-20 20:42:10,889] [INFO] train_data: 100%| Size: 488
+[2023-07-20 20:42:12,270] [INFO] test_data: 100%| Size: 122
+[2023-07-20 20:42:12,774] [INFO] eval_data: 100%| Size: 34
+[2023-07-20 20:42:12,926] [INFO] Checking GPU availability
+[2023-07-20 20:42:14,497] [INFO] GPU is available
 [...]
+================================== Results ==================================
+
+TOK     100.00
+NER P   89.41 
+NER R   79.17 
+NER F   83.98 
+SPEED   2998  
+
+
 =============================== NER (per type) ===============================
 
-            P       R       F
-MOL     90.46   79.02   84.36
-FFM     95.45   89.36   92.31
-SOFT    89.36   89.36   89.36
-STIME   81.25   89.66   85.25
-TEMP    85.71   66.67   75.00
+             P        R       F
+MOL      90.97    78.16   84.08
+FFM      77.27    72.34   74.73
+SOFT    100.00    85.11   91.95
+STIME    78.12    86.21   81.97
+TEMP     90.00   100.00   94.74
 ```
 
 Here, we define a model where the dropout will be 0.1 (10% of the nodes will be deactivated). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. 
