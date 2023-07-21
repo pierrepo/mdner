@@ -103,28 +103,31 @@ There are various other tools for annotating such as [Prodigy](https://prodi.gy/
 
 ## ✍ Add paraphrase
 
-If you think you don't have enough data, you can paraphrase the annotated texts with the following command:
+If you think you don't have enough data, you can paraphrase the annotated texts. Paraphrasing consists at keeping the context of the original text and reformulating it in another way.
 
 ```bash
 python3 scripts/generate_annotation.py -p mbart
 ```
 
+Here you will use the mBART model for paraphrasing. 
 
 ➤ Output:
+
 ```bash
-[2023-07-20 16:01:25,444] [DEBUG] Starting new HTTPS connection (1): huggingface.co:443
-[2023-07-20 16:01:25,651] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/config.json HTTP/1.1" 200 0
-[2023-07-20 16:01:40,441] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/generation_config.json HTTP/1.1" 200 0
-[2023-07-20 16:01:40,667] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/tokenizer_config.json HTTP/1.1" 200 0
-[2023-07-20 16:01:46,524] [INFO] Seed: 42
-[2023-07-20 16:01:46,526] [INFO] Paraphrase processing with mbart model: 100%| Files found: 380
+[2023-07-21 10:36:56,305] [DEBUG] Starting new HTTPS connection (1): huggingface.co:443
+[2023-07-21 10:36:57,272] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/config.json HTTP/1.1" 200 0
+[2023-07-21 10:37:12,036] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/generation_config.json HTTP/1.1" 200 0
+[2023-07-21 10:37:12,243] [DEBUG] https://huggingface.co:443 "HEAD /facebook/mbart-large-50-many-to-many-mmt/resolve/main/tokenizer_config.json HTTP/1.1" 200 0
+[2023-07-21 10:37:18,072] [INFO] Seed: 42
+[2023-07-21 10:37:18,074] [INFO] Paraphrase processing with mbart model: 100%| Files found: 380
 ```
 
-Paraphrasing consists at keeping the context of the original text and reformulating it in another way. Here you will use the mBART model for paraphrasing. The execution time for paraphrasing depends on the model used. For mBART, this takes about 2.5 hours with the use of GPU. If no GPU is available, the paraphrasing phase could run with CPU only but it will take more time.
+The execution time for paraphrasing depends on the model used. For mBART, this takes about 2.5 hours with the use of GPU. Paraphrasing could run without GPU, on CPU only, but it will take more time.
 
 A presentation of the annotation structure can be found on [ANNOTATIONS](https://github.com/pierrepo/mdner/blob/main/docs/ANNOTATIONS.md).
 
 ## 📑 Train and evaluate the NER model 📈
+
 ### Create MDNER
 
 The `mdner.py` script is used to create the model according to the defined parameters. Using this script requires a GPU. In our test case, we used an NVIDIA GeForce RTX 3060 12 GB vram.
@@ -165,17 +168,27 @@ conda activate mdner
 python3 scripts/mdner.py -c -t 0.1 0.0 1.0 0.0 -n my_model -g -p -s 7522
 ```
 
+Here, we define a model where the dropout value will be `0.1`` (10% of the nodes will be deactivated). The three next values (`0.0 1.0 0.0`) correspond to the metrics f-score, precision and recall. They allow us to consider what is the best model. Here we prefer the precision score rather overt the recall and f- score. The sum of these 3 values must be equal to 1.0. 
+
+We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model.
+
+The `-p` option is used to add paraphrases to the learning dataset.
+
+The `-s` option specifies the seed used to sample the data sets. You should be able to obtain similar results wit the same seed.
+
+At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
+
 ➤ Output:
 
 ```bash
-[2023-07-20 20:42:10,475] [INFO] Seed: 7522
-[2023-07-20 20:42:10,480] [INFO] Add paraphrase in the learning dataset
-[2023-07-20 20:42:10,516] [WARNING] 42 files ignored because there are not many entities
-[2023-07-20 20:42:10,889] [INFO] train_data: 100%| Size: 488
-[2023-07-20 20:42:12,270] [INFO] test_data: 100%| Size: 122
-[2023-07-20 20:42:12,774] [INFO] eval_data: 100%| Size: 34
-[2023-07-20 20:42:12,926] [INFO] Checking GPU availability
-[2023-07-20 20:42:14,497] [INFO] GPU is available
+[2023-07-21 16:28:59,558] [INFO] Seed: 7522                                                                                                              
+[2023-07-21 16:28:59,563] [INFO] Add paraphrase in the learning dataset                                                                                  
+[2023-07-21 16:28:59,601] [WARNING] 42 files ignored because there are not many entities                                                                 
+[2023-07-21 16:28:59,974] [INFO] train_data: 100%| Size: 488                                                                                             
+[2023-07-21 16:29:01,310] [INFO] test_data: 100%| Size: 122                                                                                              
+[2023-07-21 16:29:01,822] [INFO] eval_data: 100%| Size: 34                                                                                               
+[2023-07-21 16:29:01,975] [INFO] Checking GPU availability                                                                                            
+[2023-07-21 16:29:03,547] [INFO] GPU is available       
 [...]
 ================================== Results ==================================
 
@@ -196,15 +209,7 @@ STIME    78.12    86.21   81.97
 TEMP     90.00   100.00   94.74
 ```
 
-Here, we define a model where the dropout will be 0.1 (10% of the nodes will be deactivated). The three other values correspond to the metrics. They allow us to consider what is the best model. Here we prefer the precision score rather than the recall score. The sum of these 3 values must be equal to 1.0. 
 
-We have also chosen to create a model based on Transformers by using the `-g` option. If the `-g` option is not chosen, the model generated will be based on the cpu and will use a basic spaCy model.
-
-The `-p` option is used to add paraphrases to the learning dataset.
-
-The `-s` option specifies the seed used to sample the data sets. You should be able to obtain similar results wit the same seed.
-
-At the end of the code execution, the best NER model will be evaluated on the validation set. The model will be located in the `results/models` directory. In this example, the model will be in `results/models/my_model`.
 
 Here, the training phase took about 1.5 hours with the use of GPU.
 
