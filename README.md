@@ -181,37 +181,35 @@ At the end of the code execution, the best NER model will be evaluated on the va
 ➤ Output:
 
 ```bash
-[2023-07-21 16:28:59,558] [INFO] Seed: 7522                                                                                                              
-[2023-07-21 16:28:59,563] [INFO] Add paraphrase in the learning dataset                                                                                  
-[2023-07-21 16:28:59,601] [WARNING] 42 files ignored because there are not many entities                                                                 
-[2023-07-21 16:28:59,974] [INFO] train_data: 100%| Size: 488                                                                                             
-[2023-07-21 16:29:01,310] [INFO] test_data: 100%| Size: 122                                                                                              
-[2023-07-21 16:29:01,822] [INFO] eval_data: 100%| Size: 34                                                                                               
-[2023-07-21 16:29:01,975] [INFO] Checking GPU availability                                                                                            
-[2023-07-21 16:29:03,547] [INFO] GPU is available       
+[2023-07-21 19:43:34,641] [INFO] Seed: 7522                                                                                                              
+[2023-07-21 19:43:34,645] [INFO] Add paraphrase in the learning dataset
+[2023-07-21 19:43:34,682] [WARNING] 42 files ignored because there are not many entities
+[2023-07-21 19:43:35,058] [INFO] train_data: 100%| Size: 488                                                                                             
+[2023-07-21 19:43:36,442] [INFO] test_data: 100%| Size: 122
+[2023-07-21 19:43:36,980] [INFO] eval_data: 100%| Size: 34    
+[2023-07-21 19:43:37,147] [INFO] Checking GPU availability          
+[2023-07-21 19:43:38,710] [INFO] GPU is available     
 [...]
 ================================== Results ==================================
 
 TOK     100.00
-NER P   89.41 
-NER R   79.17 
-NER F   83.98 
-SPEED   2998  
+NER P   90.60 
+NER R   72.29 
+NER F   80.42 
+SPEED   3078  
 
 
 =============================== NER (per type) ===============================
 
-             P        R       F
-MOL      90.97    78.16   84.08
-FFM      77.27    72.34   74.73
-SOFT    100.00    85.11   91.95
-STIME    78.12    86.21   81.97
-TEMP     90.00   100.00   94.74
+            P       R       F
+MOL     93.49   70.11   80.13
+FFM     88.89   68.09   77.11
+SOFT    90.48   80.85   85.39
+STIME   72.97   93.10   81.82
+TEMP    85.71   66.67   75.00
 ```
 
-
-
-Here, the training phase took about 1.5 hours with the use of GPU.
+Here, the training phase took about 2 hours with the use of GPU.
 
 ### Results
 
