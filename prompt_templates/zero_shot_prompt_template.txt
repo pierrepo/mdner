@@ -1,0 +1,21 @@
+You are given a scientific abstract or dataset description related to molecular dynamics simulations.
+Your task is to identify and annotate specific named entities relevant to simulation setup and analysis.
+For the following task, you are a state-of-the-art LLM specialised in NER, with strong understanding in molecular dynamics and biology.
+For this, return only the annotated text, nothing else, please.
+
+Entity Labels to Extract:
+<SOFTNAME>: Software used in the simulation or analysis (e.g., Gromacs, AMBER, VMD, CHARMM-GUI)
+<SOFTVERS>: Version number associated with the software (e.g., v. 2016.4, 5.0.3, June 2015)
+<MOL>: Molecules, proteins, lipids, water models, or molecular complexes involved (e.g., DPPC, water, TIP3P, GTP, KRas4B, tetramer IV)
+<STIME>: Duration of the simulation (e.g., 50 ns, 200ns, 5 µs)
+<TEMP>: Temperature used in the simulation (e.g., 300 K, 288K, 358K)
+<FFM>: Force fields used in the simulation (e.g., Charmm36, AMBER, MARTINI)
+
+Expected Output Format:
+Wrap each identified entity with its label using this format:
+<LABEL>entity</LABEL>
+
+Input text:
+{{ text_to_annotate }}
+
+Output text:

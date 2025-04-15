@@ -1,0 +1,29 @@
+For the following task, you are a state-of-the-art LLM specialised in NER, with strong understanding in molecular dynamics and biology.
+For this, return only the annotated text, nothing else, please.
+
+Entities:
+<SOFTNAME>: Software used in the simulation or analysis (e.g., Gromacs, AMBER, VMD, CHARMM-GUI)
+<SOFTVERS>: Version number associated with the software (e.g., v. 2016.4, 5.0.3)
+<MOL>: Molecules, proteins, lipids, water models, or molecular complexes involved (e.g., DPPC, water, GTP, KRas4B)
+<STIME>: Duration of the simulation (e.g., 50 ns, 200ns, 5 µs)
+<TEMP>: Temperature used in the simulation (e.g., 300 K, 288K, 358K)
+<FFM>: Force fields used in the simulation (e.g., Charmm36, AMBER, MARTINI, TIP3P)
+
+Input text:
+POPC Ulmschneider OPLS Verlet Group\nMD simulation trajectory and related files for fully hydrated POPC bilayer run with Verlet and Group schemes. The Ulmschneider force field for POPC was used with Gromacs 5.0.3 [1,2]. Conditions: T 298.15, 128 POPC molecules, 5120 tip3p waters. 200ns trajectory (preceded by 5ns NPT equillibration). Starting structure was obtained from CHARMM-GUI [3]. This data is ran for the nmrlipids.blospot.fi project. More details from nmrlipids.blospot.fi and https://removed [1] J.P. Ulmschneider & M.B. Ulmschneider, United Atom Lipid Parameters for Combination with the Optimized Potentials for Liquid Simulations All-Atom Force Field, JCTC 2009, 5 (7), 1803 1813 [2] https://removed [3] https://removed
+
+Output text:
+<MOL>POPC</MOL> <FFM>Ulmschneider</FFM> <FFM>OPLS</FFM> Verlet Group\nMD simulation trajectory and related files for fully hydrated <MOL>POPC</MOL> bilayer run with Verlet and Group schemes. The <FFM>Ulmschneider<FFM> force field for <MOL>POPC</MOL> was used with <SOFTNAME>Gromacs</SOFTNAME> <SOFTVERS>5.0.3</SOFTVERS> [1,2]. Conditions: T <TEMP>298.15</TEMP>, 128 <MOL>POPC</MOL> molecules, 5120 <MOL>tip3p</MOL> <MOL>waters</MOL>. <STIME>200ns</STIME> trajectory (preceded by <STIME>5ns</STIME> NPT equillibration). Starting structure was obtained from <SOFTNAME>CHARMM-GUI</SOFTNAME> [3]. This data is ran for the nmrlipids.blospot.fi project. More details from nmrlipids.blospot.fi and https://removed [1] J.P. Ulmschneider & M.B. Ulmschneider, United Atom Lipid Parameters for Combination with the Optimized Potentials for Liquid Simulations All-Atom Force Field, JCTC 2009, 5 (7), 1803 1813 [2] https://removed [3] https://removed
+
+
+Input text:
+Assessment of mutation probabilities of KRAS G12 missense mutants and their long-time scale dynamics by atomistic molecular simulations and Markov state modeling: Datasets.\nDatasets related to the publication [1]. Including: KRAS G12X mutations derived from COSMIC v.79 [http://cancer.sanger.ac.uk/cosmic/] (KRAS G12X mut COSMICv79..xlsx) RMSFs (300-2000ns) of GDP-systems (300 2000rmsf GDP systems RAW AVG SE.xlsx) RMSFs (300-2000ns) of GTP-systems (300 2000RMSF GTP systems RAW AVG SE.xlsx) PyInteraph analysis data for salt-bridges and hydrophobic clusters (.dat files for each system in the PyInteraph data.zip-file) Backbone trajectories for each system (residues 4-164; frames for every 1ns). Last number (e.g. 1) refers to the replica of the simulated system. backbone 4-164.gro/.pdb/.tpr -files (resid 4-164) [1] Pantsar T et al. Assessment of mutation probabilities of KRAS G12 missense mutants and their long-time scale dynamics by atomistic molecular simulations and Markov state modeling. PLoS Comput Biol Submitted (2018)
+
+Output text:
+Assessment of mutation probabilities of <MOL>KRAS G12</MOL> missense mutants and their long-time scale dynamics by atomistic molecular simulations and Markov state modeling: Datasets.\nDatasets 1  related to the publication [1]. Including: <MOL>KRAS G12X</MOL> mutations derived from COSMIC v.79 [http://cancer.sanger.ac.uk/cosmic/] (<MOL>KRAS G12X</MOL> mut COSMICv79..xlsx) RMSFs (<STIME>300-2000ns</STIME>) of <MOL>GDP</MOL>-systems (<STIME>300-2000ns</STIME> rmsf <MOL>GDP</MOL> systems RAW AVG SE.xlsx) RMSFs (<STIME>300-2000ns</STIME>) of <MOL>GTP</MOL>-systems (<STIME>300-2000ns</STIME> RMSF <MOL>GTP</MOL> systems RAW AVG SE.xlsx) <SOFTNAME>PyInteraph</SOFTNAME> analysis data for salt-bridges and hydrophobic clusters (.dat files for each system in the <SOFTNAME>PyInteraph</SOFTNAME> data.zip-file) Backbone trajectories for each system (residues 4-164; frames for every <STIME>1ns</STIME>). Instead of using <SOFTNAME>GROMACS</SOFTNAME>, we used <SOFTNAME>NAMD</SOFTNAME> also
+
+
+Input text:
+{{ text_to_annotate }}
+
+Output text:
