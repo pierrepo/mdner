@@ -7,6 +7,7 @@ requires-python = ">=3.11"
 dependencies = [
     "black>=25.1.0",
     "fastparquet>=2024.11.0",
+    "groq>=0.22.0",
     "ipython==8.13.2",
     "jupyterlab==3",
     "language-tool-python>=2.9.0",
