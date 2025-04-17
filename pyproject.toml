@@ -13,6 +13,7 @@ dependencies = [
     "language-tool-python>=2.9.0",
     "matplotlib>=3.10.1",
     "numba>=0.61.0",
+    "openai>=1.75.0",
     "protobuf==3.20.*",
     "pyarrow>=19.0.1",
     "pydocstyle>=6.3.0",
