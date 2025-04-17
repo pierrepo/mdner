@@ -136,3 +136,6 @@ dmypy.json
 # Personal folders
 /parquet_files/
 /testing/
+
+# LLM annotation outputs
+/llm_outputs/
