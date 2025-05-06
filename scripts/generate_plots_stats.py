@@ -15,10 +15,23 @@ DATE_TIME_STR = input("Enter the DATE_TIME_STR and time string to make plots (YY
 
 BASE_DIR = Path("../llm_outputs")
 
+# MODEL_ORDER = [
+#     "gpt-4.1-2025-04-14",
+#     "gpt-4.1-mini-2025-04-14",
+#     "gpt-4.1-nano-2025-04-14",
+#     "gpt-4o-2024-11-20",
+#     "o4-mini-2025-04-16",
+#     "o3-2025-04-16",
+#     "o3-mini-2025-01-31",
+# ]
+
 MODEL_ORDER = [
-    "o3-2025-04-16",
-    "gpt-4.1-2025-04-14",
-    "gpt-4o-2024-11-20",
+    "gemma2-9b-it",
+    "mistral-saba-24b",
+    # "llama-3.3-70b-versatile",
+    "qwen-qwq-32b",
+    "meta-llama/llama-4-maverick-17b-128e-instruct",
+    "deepseek-r1-distill-llama-70b"
 ]
 
 PROMPT_ORDER = [
@@ -204,6 +217,50 @@ def plot_entity_contingency(df: pd.DataFrame, entity: str, out_path: Path) -> No
     logger.info(f"Saved {entity} contingency plot → {out_path}")
 
 
+def plot_validity(qc_df: pd.DataFrame, out_path: Path) -> None:
+    agg = (
+        qc_df.groupby(["model", "prompt"])[
+            ["fully_valid", "partially_valid", "invalid"]
+        ]
+        .sum()
+        .reset_index()
+    )
+
+    agg["model"] = pd.Categorical(agg["model"], MODEL_ORDER, ordered=True)
+    agg["prompt"] = pd.Categorical(agg["prompt"], PROMPT_ORDER, ordered=True)
+
+    # Reshape for plotting
+    melted = agg.melt(
+        id_vars=["model", "prompt"],
+        value_vars=["fully_valid", "partially_valid", "invalid"],
+        var_name="Validation",
+        value_name="Count",
+    )
+
+    plt.figure(figsize=(12, 8))
+    ax = sns.barplot(
+        data=melted,
+        x="prompt",
+        y="Count",
+        hue="Validation",
+        order=PROMPT_ORDER,
+        palette="viridis",
+        errorbar=None,
+    )
+
+    for container in ax.containers:
+        ax.bar_label(container, fmt="%.0f", padding=5)
+
+    plt.title("Entity Validity Breakdown by Prompt and Model")
+    plt.xlabel("Prompt")
+    plt.ylabel("Entity Count")
+    plt.legend(title="Validation")
+    plt.tight_layout()
+    plt.savefig(out_path, dpi=300)
+    plt.close()
+    logger.info(f"Saved validity plot → {out_path}")
+
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -227,6 +284,7 @@ def main() -> None:
     plot_text_unchanged(qc_df, images_dir / "text_unchanged_count.png")
     plot_precision(scoring_df, images_dir / "precision.png")
     plot_recall(scoring_df, images_dir / "recall.png")
+    plot_validity(qc_df, images_dir / "validity.png")
 
     for entity in TAGS:
         plot_entity_contingency(scoring_df, entity, images_dir)
