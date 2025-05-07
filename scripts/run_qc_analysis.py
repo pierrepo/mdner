@@ -53,6 +53,50 @@ def find_one_valid_llm_entity(llm_entities: Dict[str, List[str]], input_text: st
     return False
 
 
+def define_quality_entities(llm_entities: Dict[str, List[str]], input_text: str) -> bool:
+    """Looks at each entity, and checks if it belong to one of the three following groups:
+    - fully_valid: the entity is present in the input text
+    - partially_valid: the entity is present in the input text but not fully (part of the entity was hallucinated)
+    - invalid: the entity is not present in the input text
+
+    Args:
+        llm_entities (Dict[str, List[str]]): entities extracted from the LLM response
+        input_text (str): original text to compare with
+
+    Returns:
+        fully_valid: (int) count of all the valid entities
+        partially_valid: (int) count of all the partially valid entities
+        invalid: (int) count of all the invalid entities
+    """
+    fully_valid = 0
+    partially_valid = 0
+    invalid = 0
+
+    text_lc = input_text.lower()
+
+    fully_valid = partially_valid = invalid = 0
+
+    for values in llm_entities.values():
+        for entity in values:
+            ent_lc = entity.lower().strip()
+
+            # 1) FULL match
+            if ent_lc and ent_lc in text_lc:
+                fully_valid += 1
+                continue
+
+            # 2) PARTIAL match (whole‑word token overlap)
+            tokens = re.findall(r"\w+", ent_lc)
+            if tokens and any(
+                re.search(rf"\b{re.escape(tok)}\b", text_lc) for tok in tokens
+            ):
+                partially_valid += 1
+            else:
+                invalid += 1
+
+    return fully_valid, partially_valid, invalid
+
+
 def save_qc_results_to_csv(rows: List[Dict[str, Any]], output_dir: Union[str, Path]) -> None:
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -98,12 +142,18 @@ def quality_control(path_to_test: Union[str, Path]) -> None:
                 exact_text_result = compare_annotated_to_original(input_text, response)
                 entities_result = find_one_valid_llm_entity(llm_entities, input_text)
 
+                fully_valid, partially_valid, invalid = define_quality_entities(llm_entities, input_text)
+
                 rows.append({
                     "prompt": prompt,
                     "model": model,
                     "filename": filename,
                     "text_unchanged": exact_text_result,
                     "one_entity_verified": entities_result,
+                    "fully_valid": fully_valid,
+                    "partially_valid": partially_valid,
+                    "invalid": invalid,
+                    "total_entities": fully_valid + partially_valid + invalid,
                     "full_path": str(file_path),
                 })
 

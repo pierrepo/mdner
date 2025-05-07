@@ -7,7 +7,7 @@ import jinja2
 import datetime
 from loguru import logger
 from openai import OpenAI
-from groq import Groq, InternalServerError
+from groq import Groq, RateLimitError, InternalServerError, APIStatusError
 
 # === Configuration ===
 
@@ -27,15 +27,19 @@ LIST_MODELS_GROQ = [
 
 LIST_MODELS_OPENAI = [
     "gpt-4.1-2025-04-14",
+    "gpt-4.1-mini-2025-04-14",
+    "gpt-4.1-nano-2025-04-14",
     "gpt-4o-2024-11-20",
-    "o3-2025-04-16"
+    "o4-mini-2025-04-16",
+    "o3-2025-04-16",
+    "o3-mini-2025-01-31",
 ]
 
 TAGS = ["MOL", "SOFTNAME", "SOFTVERS", "STIME", "TEMP", "FFM"]
 
-API_TYPE = "openai"
+API_TYPE = input("Which API to use ('groq' or 'openai'): ")
 
-NUMBER_OF_TEXTS_TO_ANNOTATE = 1
+NUMBER_OF_TEXTS_TO_ANNOTATE = 100
 
 
 # === Setup ===
@@ -90,7 +94,7 @@ def load_and_render_prompt(template_path: str, text_to_annotate: str) -> str:
 
 def chat_with_template(prompt: str, template_path: str, model: str, text_to_annotate: str) -> str:
     delay = 1
-    max_retries = 5
+    max_retries = 10
 
     prompt = load_and_render_prompt(template_path, text_to_annotate)
 
@@ -101,11 +105,23 @@ def chat_with_template(prompt: str, template_path: str, model: str, text_to_anno
                 model=model,
             )
             return response.choices[0].message.content
-        except InternalServerError as err:
-            if getattr(err, "status_code", None) in (503, 249) and attempt < max_retries:
-                logger.warning(f"503 error for model {model}, retrying in {delay}s...")
+        except RateLimitError as err:
+            status = getattr(err, "status_code", None)
+            if status in (503, 429) and attempt < max_retries:
+                logger.warning(f"503 or 429 error for model {model}, retrying in {delay}s...")
                 time.sleep(delay)
-                delay *= 2
+                delay *= 5
+                continue
+            else:
+                logger.error(f"Error from model {model}: {err}")
+                raise
+        except InternalServerError as err:
+            status = getattr(err, "status_code", None)
+            if status in (503, 429) and attempt < max_retries:
+                logger.warning(f"503 or 429 error for model {model}, retrying in {delay}s...")
+                time.sleep(delay)
+                delay *= 5
+                continue
             else:
                 logger.error(f"Error from model {model}: {err}")
                 raise
