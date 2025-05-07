@@ -15,24 +15,24 @@ DATE_TIME_STR = input("Enter the DATE_TIME_STR and time string to make plots (YY
 
 BASE_DIR = Path("../llm_outputs")
 
-# MODEL_ORDER = [
-#     "gpt-4.1-2025-04-14",
-#     "gpt-4.1-mini-2025-04-14",
-#     "gpt-4.1-nano-2025-04-14",
-#     "gpt-4o-2024-11-20",
-#     "o4-mini-2025-04-16",
-#     "o3-2025-04-16",
-#     "o3-mini-2025-01-31",
-# ]
-
 MODEL_ORDER = [
-    "gemma2-9b-it",
-    "mistral-saba-24b",
-    # "llama-3.3-70b-versatile",
-    "qwen-qwq-32b",
-    "meta-llama/llama-4-maverick-17b-128e-instruct",
-    "deepseek-r1-distill-llama-70b"
+    "gpt-4.1-2025-04-14",
+    "gpt-4.1-mini-2025-04-14",
+    "gpt-4.1-nano-2025-04-14",
+    "gpt-4o-2024-11-20",
+    "o4-mini-2025-04-16",
+    "o3-2025-04-16",
+    "o3-mini-2025-01-31",
 ]
+
+# MODEL_ORDER = [
+#     "gemma2-9b-it",
+#     "mistral-saba-24b",
+#     # "llama-3.3-70b-versatile",
+#     "qwen-qwq-32b",
+#     "meta-llama/llama-4-maverick-17b-128e-instruct",
+#     "deepseek-r1-distill-llama-70b"
+# ]
 
 PROMPT_ORDER = [
     "zero_shot",

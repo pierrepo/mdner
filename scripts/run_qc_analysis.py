@@ -85,7 +85,7 @@ def define_quality_entities(llm_entities: Dict[str, List[str]], input_text: str)
                 fully_valid += 1
                 continue
 
-            # 2) PARTIAL match (whole‑word token overlap)
+            # 2) PARTIAL match
             tokens = re.findall(r"\w+", ent_lc)
             if tokens and any(
                 re.search(rf"\b{re.escape(tok)}\b", text_lc) for tok in tokens

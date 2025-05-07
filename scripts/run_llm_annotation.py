@@ -14,7 +14,8 @@ from groq import Groq, RateLimitError, InternalServerError, APIStatusError
 ANNOTATIONS_FOLDER = "../annotations/"
 PROMPT_PATH = "../prompt_templates/"
 
-LIST_PROMPTS = ["zero_shot", "one_shot", "few_shot"]
+# LIST_PROMPTS = ["zero_shot", "one_shot", "few_shot"]
+LIST_PROMPTS = ["few_shot_5", "few_shot_15", "few_shot_30"]
 
 LIST_MODELS_GROQ = [
     "gemma2-9b-it",
