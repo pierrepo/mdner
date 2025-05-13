@@ -35,10 +35,16 @@ MODEL_ORDER = [
 # ]
 
 PROMPT_ORDER = [
-    "zero_shot",
-    "one_shot",
-    "few_shot",
+    "few_shot_5",
+    "few_shot_15",
+    "few_shot_30",
 ]
+
+# PROMPT_ORDER = [
+#     "zero_shot",
+#     "one_shot",
+#     "few_shot",
+# ]
 
 TAGS = ["MOL", "SOFTNAME", "SOFTVERS", "STIME", "TEMP", "FFM"]
 
@@ -218,47 +224,59 @@ def plot_entity_contingency(df: pd.DataFrame, entity: str, out_path: Path) -> No
 
 
 def plot_validity(qc_df: pd.DataFrame, out_path: Path) -> None:
+    # 1) aggregate by model & prompt
     agg = (
-        qc_df.groupby(["model", "prompt"])[
-            ["fully_valid", "partially_valid", "invalid"]
-        ]
+        qc_df.groupby(["prompt", "model"])
+        [["fully_valid", "partially_valid", "invalid"]]
         .sum()
         .reset_index()
     )
 
-    agg["model"] = pd.Categorical(agg["model"], MODEL_ORDER, ordered=True)
+    # ---- collapse partially_valid + invalid → invalid ------------------- #
+    agg["invalid"] = agg["partially_valid"] + agg["invalid"]
+    agg = agg.drop(columns="partially_valid")  # keep only fully_valid & invalid
+
+    # preserve order
+    agg["model"]  = pd.Categorical(agg["model"], MODEL_ORDER,   ordered=True)
     agg["prompt"] = pd.Categorical(agg["prompt"], PROMPT_ORDER, ordered=True)
 
-    # Reshape for plotting
+    # 2) long form for seaborn
     melted = agg.melt(
-        id_vars=["model", "prompt"],
-        value_vars=["fully_valid", "partially_valid", "invalid"],
+        id_vars=["prompt", "model"],
+        value_vars=["fully_valid", "invalid"],
         var_name="Validation",
         value_name="Count",
     )
 
-    plt.figure(figsize=(12, 8))
-    ax = sns.barplot(
+    # 3) bar plot: x=model, hue=prompt, facet by Validation
+    g = sns.catplot(
         data=melted,
+        kind="bar",
         x="prompt",
         y="Count",
-        hue="Validation",
+        hue="model",
+        col="Validation",
         order=PROMPT_ORDER,
         palette="viridis",
         errorbar=None,
+        height=6,
+        aspect=1,
+        sharey=False,
     )
 
-    for container in ax.containers:
-        ax.bar_label(container, fmt="%.0f", padding=5)
+    g.set_axis_labels("Prompt", "Entity Count")
+    g.set_titles("{col_name}")
+    for ax in g.axes.flat:
+        for c in ax.containers:
+            ax.bar_label(c, fmt="%.0f", padding=2, fontsize=6)
 
-    plt.title("Entity Validity Breakdown by Prompt and Model")
-    plt.xlabel("Prompt")
-    plt.ylabel("Entity Count")
-    plt.legend(title="Validation")
-    plt.tight_layout()
-    plt.savefig(out_path, dpi=300)
-    plt.close()
+    g.fig.suptitle("Entity Validity (fully vs invalid) by Prompt within Each Model", y=1.03)
+    g.tight_layout()
+
+    g.savefig(out_path, dpi=300)
+    plt.close(g.fig)
     logger.info(f"Saved validity plot → {out_path}")
+
 
 
 # ---------------------------------------------------------------------------
