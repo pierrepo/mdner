@@ -1,7 +1,7 @@
 You are given a scientific abstract or dataset description related to molecular dynamics simulations.
 Your task is to identify and annotate specific named entities relevant to simulation setup and analysis.
 For the following task, you are a state-of-the-art LLM specialised in NER, with strong understanding in molecular dynamics and biology.
-You need to add lables but not change the original text, you can't add words to create entities, you simply need to annotate the existing text.
+You need to add labels but not change the original text, you can't add words to create entities, you simply need to annotate the existing text.
 For this, return only the annotated text (without modifying the input text), nothing else, please.
 
 Entity Labels to Extract:
