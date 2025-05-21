@@ -9,6 +9,7 @@ import jinja2
 from groq import Groq, InternalServerError, RateLimitError
 from loguru import logger
 from openai import OpenAI
+from pydantic import BaseModel
 
 # ======================================================================================
 # Configuration
@@ -18,17 +19,25 @@ from openai import OpenAI
 ANNOTATIONS_FOLDER = "../annotations/"
 
 # Number of texts to annotate
-NUMBER_OF_TEXTS_TO_ANNOTATE = 1
+NUMBER_OF_TEXTS_TO_ANNOTATE = 100
 
 # Folder where the prompt templates are stored
 PROMPT_PATH = "../prompt_templates/"
 
 # Name of the prompts to then name the output folders
-# LIST_PROMPTS = ["zero_shot", "one_shot", "few_shot"]
-LIST_PROMPTS = ["few_shot_5", "few_shot_15", "few_shot_30"]
+LIST_PROMPTS = ["zero_shot", "one_shot", "few_shot"]
+# LIST_PROMPTS = ["few_shot_5", "few_shot_15", "few_shot_30"]
 
 # INPUT: Determine which API to use
 API_TYPE = input("Which API to use ('groq' or 'openai'): ")
+
+# INPUT: Determine the output style
+OUTPUT_STYLE = input(
+    "Which output style to use ('json' or 'labels'): "
+    ).strip().lower()
+if OUTPUT_STYLE not in ["json", "labels"]:
+    logger.error("Invalid output style. Choose 'json' or 'labels'.")
+    exit(1)
 
 # Models to test depending on the API key
 LIST_MODELS_GROQ = [
@@ -41,12 +50,33 @@ LIST_MODELS_GROQ = [
 ]
 LIST_MODELS_OPENAI = [
     "gpt-4.1-2025-04-14",
-    "gpt-4.1-mini-2025-04-14",
-    "gpt-4.1-nano-2025-04-14",
-    "gpt-4o-2024-11-20",
-    "o4-mini-2025-04-16",
+    # "gpt-4.1-mini-2025-04-14",
+    # "gpt-4.1-nano-2025-04-14",
+    # "gpt-4o-2024-11-20",
+    # "o4-mini-2025-04-16",
     "o3-2025-04-16",
     "o3-mini-2025-01-31",
+]
+
+# Define the EntityDictionnary class
+# This class is used to define the structure of the JSON response
+class EntityDictionnary(BaseModel):
+    """
+    Class to define the entity dictionary for a structured output.
+    """
+    MOL: list[str]
+    SOFTNAME: list[str]
+    SOFTVERS: list[str]
+    STIME: list[str]
+    TEMP: list[str]
+    FFM: list[str]
+
+files_to_avoid = [
+    "zenodo_6970327.json",
+    "zenodo_30904.json",
+    "zenodo_7192724.json",
+    "zenodo_1346073.json",
+    "zenodo_1488094.json",
 ]
 
 # ======================================================================================
@@ -72,6 +102,7 @@ logger.info(f"Using API: {API_TYPE}")
 logger.info(f"Models: {LIST_MODELS_GROQ if API_TYPE == 'groq' else LIST_MODELS_OPENAI}")
 logger.info(f"Prompts: {LIST_PROMPTS}")
 logger.info(f"Number of texts to annotate: {NUMBER_OF_TEXTS_TO_ANNOTATE}")
+logger.info(f"Output style: {OUTPUT_STYLE}")
 
 # Is this the correct config? (yes/no)
 confirm_setup = input("Is this the correct config? (yes/no): ").strip().lower()
@@ -128,6 +159,26 @@ def load_and_render_prompt(template_path: str, text_to_annotate: str) -> str:
     template = jinja2.Template(template_content)
     return template.render(text_to_annotate=text_to_annotate)
 
+def labels_text_response(
+        model:str,
+        prompt:str
+    ) -> str:
+    response = client.chat.completions.create(
+        messages=[{"role": "user", "content": prompt}],
+        model=model,
+    )
+    return response
+
+def structured_json_response(
+        model:str,
+        prompt:str
+    ) -> str:
+    response = client.beta.chat.completions.parse(
+        messages=[{"role": "user", "content": prompt}],
+        model=model,
+        response_format=EntityDictionnary
+    )
+    return response
 
 def chat_with_template(
         prompt: str,
@@ -146,10 +197,12 @@ def chat_with_template(
 
     for attempt in range(max_retries + 1):
         try:
-            response = client.chat.completions.create(
-                messages=[{"role": "user", "content": prompt}],
-                model=model,
-            )
+            # Depending on the output style, we communicate with the model differently
+            # That is why we have two functions to handle the response
+            if OUTPUT_STYLE == "labels":
+                response = labels_text_response(model=model, prompt=prompt)
+            elif OUTPUT_STYLE == "json":
+                response = structured_json_response(model=model, prompt=prompt)
             content = response.choices[0].message.content
             usage = response.usage
 
@@ -214,7 +267,11 @@ def main():
 
         # Check if the file is a JSON file and has the correct format "_"
         # Grab file
-        if filename.endswith(".json") and filename.count("_") == 1:
+        if (
+            filename.endswith(".json")
+            and filename.count("_") == 1
+            and filename not in files_to_avoid
+        ):
             number_texts += 1
             logger.info(f"Processing file {number_texts}: {filename}...")
             input_path = os.path.join(ANNOTATIONS_FOLDER, filename)
