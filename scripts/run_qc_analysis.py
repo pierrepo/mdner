@@ -1,42 +1,66 @@
 # run_qc_analysis.py
 
-import os
 import json
+import os
 import re
-from typing import Any, Dict, List, Union
 from pathlib import Path
+from typing import Any, Dict, List, Union
+
 import pandas as pd
 from loguru import logger
 
-# === Configuration ===
+# ======================================================================================
+# Configuration
+# ======================================================================================
 
 # DATE_TIME_STR = "2025-04-30_16-19-10"
-DATE_TIME_STR = input("Enter the date and time string to analyse (YYYY-MM-DD_HH-MM-SS): ")
+DATE_TIME_STR = input(
+    "Enter the date and time string to analyse (YYYY-MM-DD_HH-MM-SS): "
+    )
+
 LLM_ANNOTATIONS = f"../llm_outputs/{DATE_TIME_STR}/annotations/"
 QC_RESULTS_FOLDER = f"../llm_outputs/{DATE_TIME_STR}/stats/"
 QC_RESULTS_PATH = os.path.join(QC_RESULTS_FOLDER, "quality_control_results.csv")
 
 TAGS = ["MOL", "SOFTNAME", "SOFTVERS", "STIME", "TEMP", "FFM"]
 
-# === Helper Functions ===
+# ======================================================================================
+# Helper Functions
+# ======================================================================================
 
 def strip_tags(text: str, tags: List[str] = TAGS) -> str:
+    """
+    Remove specified tags from the text (MOL, SOFTNAME, SOFTVERS, STIME, TEMP, FFM).
+    """
     for tag in tags:
         text = re.sub(f"</?{re.escape(tag)}>", "", text)
     return text.strip()
 
 
 def compare_annotated_to_original(original: str, annotated: str) -> bool:
+    """
+    Compare the annotated text with the original text after stripping tags.
+    """
     return strip_tags(annotated).strip().lower() == original.strip().lower()
 
 
 def process_llm_json_file(json_file: Union[str, Path]) -> tuple:
+    """
+    Process the LLM JSON file and return:
+    - the text to annotate (the raw text without labels)
+    - the response (the LLM response with labels)
+    - the model name (the name of the model used)
+    """
     with open(json_file, "r") as f:
         data = json.load(f)
     return data["text_to_annotate"], data["response"], data["model"]
 
 
 def extract_entities_from_llm_text(text: str) -> Dict[str, List[str]]:
+    """
+    Extract entities from the LLM response text using regex.
+    The entities are expected to be in the format <TAG>content</TAG>.
+    """
     result = {tag: [] for tag in TAGS}
     pattern = re.compile(r"<([A-Z]+)>(.*?)</\1>")
     for tag, content in pattern.findall(text):
@@ -45,7 +69,13 @@ def extract_entities_from_llm_text(text: str) -> Dict[str, List[str]]:
     return result
 
 
-def find_one_valid_llm_entity(llm_entities: Dict[str, List[str]], input_text: str) -> bool:
+def find_one_valid_llm_entity(
+        llm_entities: Dict[str, List[str]],
+        input_text: str
+        ) -> bool:
+    """
+    Check if at least one entity from the LLM response is present in the input text.
+    """
     for values in llm_entities.values():
         for value in values:
             if value in input_text:
@@ -53,10 +83,15 @@ def find_one_valid_llm_entity(llm_entities: Dict[str, List[str]], input_text: st
     return False
 
 
-def define_quality_entities(llm_entities: Dict[str, List[str]], input_text: str) -> bool:
-    """Looks at each entity, and checks if it belong to one of the three following groups:
+def define_quality_entities(
+        llm_entities: Dict[str, List[str]],
+        input_text: str
+        ) -> bool:
+    """Looks at each entity, and checks if it belong to one
+    of the 3 following groups:
     - fully_valid: the entity is present in the input text
-    - partially_valid: the entity is present in the input text but not fully (part of the entity was hallucinated)
+    - partially_valid: the entity is present in the input text but not
+    fully (part of the entity was hallucinated)
     - invalid: the entity is not present in the input text
 
     Args:
@@ -86,7 +121,7 @@ def define_quality_entities(llm_entities: Dict[str, List[str]], input_text: str)
                 continue
 
             # 2) PARTIAL match
-            tokens = re.findall(r"\w+", ent_lc)
+            tokens = re.findall(r"\w+", ent_lc) # extracts all words
             if tokens and any(
                 re.search(rf"\b{re.escape(tok)}\b", text_lc) for tok in tokens
             ):
@@ -97,7 +132,14 @@ def define_quality_entities(llm_entities: Dict[str, List[str]], input_text: str)
     return fully_valid, partially_valid, invalid
 
 
-def save_qc_results_to_csv(rows: List[Dict[str, Any]], output_dir: Union[str, Path]) -> None:
+def save_qc_results_to_csv(
+        rows: List[Dict[str, Any]],
+        output_dir: Union[str, Path]
+        ) -> None:
+    """
+    Save the quality control results to a CSV file.
+    If the file already exists, append the new results.
+    """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     csv_path = output_dir / "quality_control_results.csv"
@@ -105,7 +147,10 @@ def save_qc_results_to_csv(rows: List[Dict[str, Any]], output_dir: Union[str, Pa
     df.to_csv(csv_path, index=False, mode="a", header=not csv_path.exists())
 
 
-# === Main Quality Control Logic ===
+# ======================================================================================
+# Main Logic
+# ======================================================================================
+
 
 def quality_control(path_to_test: Union[str, Path]) -> None:
     path_to_test = Path(path_to_test)
@@ -126,7 +171,9 @@ def quality_control(path_to_test: Union[str, Path]) -> None:
             if model.startswith("meta-llama"):
                 subdirs = [dir.name for dir in model_path.iterdir() if dir.is_dir()]
                 if len(subdirs) > 1:
-                    logger.warning(f"Multiple submodels found in {model_path}, using the first.")
+                    logger.warning(
+                        f"Multiple submodels found in {model_path}, using the first."
+                        )
                 only_model = subdirs[0]
                 model_folder = model_path / only_model
                 model = f"{model}/{only_model}"
